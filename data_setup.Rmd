@@ -37,8 +37,6 @@ seqAA<- as.AAbin(seqAA)
 ```{r}
 seqAlign<-muscle(seqAA,quiet=F)
 alview(seqAlign)
-monopic <- image.AAbin(seqAlign, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), 
-            show.aa = T, ylab = "WNV Variants", xlab = "Sequence Length", 
-            show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
+monopic <- image.AAbin(seqAlign, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
 ```
 

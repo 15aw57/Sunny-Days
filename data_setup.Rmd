@@ -1,0 +1,27 @@
+---
+title: "data_setup"
+author: "Micah GVI"
+date: "04/03/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r package load}
+library(BiocManager)
+library(annotate)
+library(ape)
+library(ggtree)
+library(seqinr)
+library(Biostrings)
+```
+
+
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+

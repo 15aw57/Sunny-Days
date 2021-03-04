@@ -17,11 +17,28 @@ library(ape)
 library(ggtree)
 library(seqinr)
 library(Biostrings)
+library(wesanderson)
+library(viridis)
+library(ggplot2)
 ```
 
 
 
 ```{r pressure, echo=FALSE}
-plot(pressure)
+seq <- readAAStringSet("./input/sequence.fa")
+seqDF <- data.frame(seq)
+names(seqDF) <- c("seq")
+seqDF <- cbind("WNV Variant" = rownames(seqDF), seqDF)
+seqAA<-sapply(seqDF$seq,strsplit,split="")
+names(seqAA)<-paste(seqDF$`WNV variant`)
+seqAA<- as.AAbin(seqAA)
+```
+
+```{r}
+seqAlign<-muscle(seqAA,quiet=F)
+alview(seqAlign)
+monopic <- image.AAbin(seqAlign, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), 
+            show.aa = T, ylab = "WNV Variants", xlab = "Sequence Length", 
+            show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
 ```
 

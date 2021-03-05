@@ -40,3 +40,27 @@ alview(seqAlign)
 monopic <- image.AAbin(seqAlign, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
 ```
 
+```{r}
+## Generate a distance matrix.
+install.packages("phangorn")
+library(phangorn) # Load phangorn library.
+seqAlign<-as.phyDat(seqAlign)
+class(seqAlign) #phyDat
+
+seqDM1<-dist.ml(seqAlign) # generate distance matrix based on AA sequences; default model is JC69 (equal base frequencies).
+seqDM<-dist.ml(seqAlign,model="F81") # appear very similar. Not sure which is the correct model to use.
+class(seqDM) # Dist
+length(seqDM) # 2346
+?dist.ml
+
+seqDMmat<-as.matrix(seqDM) # convert to matrix format.
+dim(seqDMmat) # 69 x 69
+
+## Melt to a linear matrix.
+library(reshape2)
+DMMat<-melt(seqDMmat) # Linear matrix.
+ggplot(data=DMMat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_gradientn(colours=c("white","blue","green","red"))
+
+```
+
+

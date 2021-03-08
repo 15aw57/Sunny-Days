@@ -81,8 +81,11 @@ ggtree(col, layout="rectangular", aes(color = group))
 ```
 
 ```{r}
-Country<-sub("\\w+\\s+\\|(\\w+|\\w+\\s\\w+)\\|(\\w+|\\w+\\s\\w+)\\|.+","\\2",NJtree$tip.label) #uses regex to capture country 
+Country<-sub("\\w+\\s+\\|(\\w+|\\w+\\s\\w+)\\|(\\w+|\\w+\\s\\w+)\\|.+","\\2",PhyloTree$tip.label) #uses regex to capture country 
 #there is an error in this pattern - 2 strains not captured 
+
+PhyloTree$tip.label[28] #show no country 
+PhyloTree$tip.label[45] 
 head(Country) 
 
 #Country <- stri_extract_all(PhyloTree$tip.label, regex= "USA|Australia|South|Africa|Israel|Russia|India|Madagascar|Azerbaijan|Ukraine|Azerbaijan", mode = "all", simplify =TRUE) 

@@ -20,6 +20,7 @@ library(Biostrings)
 library(wesanderson)
 library(viridis)
 library(ggplot2)
+library(stringi)
 ```
 
 
@@ -55,6 +56,30 @@ library(reshape2)
 DMMat<-melt(seqDMmat) # Linear matrix.
 ggplot(data=DMMat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_gradientn(colours=c("white","blue","green","red")) # Visualization not working.
 ```
+#### Group Vector Information and create Phylogeny
+
+```{r}
+PhyloTree = nj(seqDM) #Build a phylogeny using neighbour-joining method
+```
+
+```{r}
+
+#Use regex and stringi to select strain vector from dataset
+Vect = stri_extract_all(PhyloTree$tip.label, regex= "Culex|Homo sapiens|Culiseta|Corvus|Aves|Aedes|Culicidae",
+                        mode = "all", simplify =TRUE) 
+
+Groups = split(PhyloTree$tip.label, Vect) #Separate vector from strain name
+
+col = groupOTU(PhyloTree,Groups) #Create a group composed of vectors
+
+str(col) #Display "col" information to ensure groups were properly formed
+
+```
+
+```{r}
+ggtree(col, layout="rectangular", aes(color = group))
+```
+
 
 
 

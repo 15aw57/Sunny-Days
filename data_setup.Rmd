@@ -93,7 +93,7 @@ Ccol<-groupOTU(PhyloTree,CountryGroups)
 str(Ccol)
 
 
-ggtree(Ccol, layout="rectangular", aes(color = group))
+ggtree(Ccol, layout="circular", aes(color = group))
 ```
 
 

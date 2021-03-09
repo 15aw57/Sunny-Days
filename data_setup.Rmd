@@ -59,7 +59,7 @@ ggplot(data=DMMat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_grad
 #### Group Vector Information and create Phylogeny
 
 ```{r}
-PhyloTree = nj(seqDM) #Build a phylogeny using neighbour-joining method
+PhyloTree = nj(seqDM) #Build a phylogeny using neighbour-joining method <- <- 
 ```
 
 ```{r}

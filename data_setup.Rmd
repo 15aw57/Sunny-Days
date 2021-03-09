@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-```{r package load}
+```{r package load, warning=FALSE, message=FALSE}
 library(BiocManager)
 library(annotate)
 library(ape)
@@ -79,24 +79,30 @@ str(col) #Display "col" information to ensure groups were properly formed
 ```{r}
 ggtree(col, layout="rectangular", aes(color = group))
 ```
+```{r}
+#Two genomes were missing the country, so I checked the research papers where the data was published and added in the missing countries to our dataset (Kenya and Czech Republic)
+
+Country = stri_extract_all(PhyloTree$tip.label, regex= "USA|Australia|South Africa|Israel|Russia|India|Madagascar|Azerbaijan|Ukraine|Czech Republic|Kenya", mode = "all", simplify =TRUE) 
+
+CountryGroups = split(PhyloTree$tip.label, Country)
+Ccol = groupOTU(PhyloTree,CountryGroups)
+str(Ccol) #Extra group category 0 is being created for some reason
+```
 
 ```{r}
-Country<-sub("\\w+\\s+\\|(\\w+|\\w+\\s\\w+)\\|(\\w+|\\w+\\s\\w+)\\|.+","\\2",PhyloTree$tip.label) #uses regex to capture country 
+ggtree(Ccol, layout="circular", branch.length = "none", aes(color = group))
+```
+
+
+
+```{r}
+#OG code
+#Country<-sub("\\w+\\s+\\|(\\w+|\\w+\\s\\w+)\\|(\\w+|\\w+\\s\\w+)\\|.+","\\2",PhyloTree$tip.label) #uses regex to capture country 
 #there is an error in this pattern - 2 strains not captured 
 
-PhyloTree$tip.label[28] #show no country 
-PhyloTree$tip.label[45] 
-head(Country) 
-
-#Country <- stri_extract_all(PhyloTree$tip.label, regex= "USA|Australia|South|Africa|Israel|Russia|India|Madagascar|Azerbaijan|Ukraine|Azerbaijan", mode = "all", simplify =TRUE) 
-
-
-CountryGroups<-split(PhyloTree$tip.label, Country)
-Ccol<-groupOTU(PhyloTree,CountryGroups)
-str(Ccol)
-
-
-ggtree(Ccol, layout="circular", aes(color = group))
+#PhyloTree$tip.label[28] #show no country 
+#PhyloTree$tip.label[45] 
+#head(Country) 
 ```
 
 

@@ -67,7 +67,7 @@ PhyloTree = nj(seqDM) #Build a phylogeny using neighbour-joining method <- <-
 #Use regex and stringi to select strain vector from dataset
 Vect = stri_extract_all(PhyloTree$tip.label, regex= "Culex|Homo sapiens|Culiseta|Corvus|Aves|Aedes|Culicidae",
                         mode = "all", simplify =TRUE) 
-Vect<-sub("\\w+\\s+\\|(\\w+|\\w+\\s\\w+)\\|(\\w+|\\w+\\s\\w+)\\|.+","\\1",PhyloTree$tip.label) #uses regex to capture country 
+#Vect<-sub("\\w+\\s+\\|(\\w+|\\w+\\s\\w+)\\|(\\w+|\\w+\\s\\w+)\\|.+","\\1",PhyloTree$tip.label) #uses regex to capture all vectors. Only keeping here if needed in the future analysis
 
 Groups = split(PhyloTree$tip.label, Vect) #Separate vector from strain name
 

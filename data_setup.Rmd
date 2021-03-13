@@ -30,10 +30,20 @@ seq <- readAAStringSet("./input/sequence.fa")
 seqDF <- data.frame(seq)
 names(seqDF) <- c("seq")
 seqDF <- cbind("WNV Variant" = rownames(seqDF), seqDF)
-seqAA<-sapply(seqDF$seq,strsplit,split="")
-names(seqAA)<-seqDF$`WNV Variant`  # Removed paste bc it wasn't conserving the sequence names and was affecting my distance matrix visualization.
-seqAA<- as.AAbin(seqAA)
+fullseqAA<-sapply(seqDF$seq,strsplit,split="")
+names(fullseqAA)<-seqDF$`WNV Variant`  # Removed paste bc it wasn't conserving the sequence names and was affecting my distance matrix visualization.
+fullseqAA<- as.AAbin(seqAA)
 ```
+
+```{r}
+# Check sequence length - keep only if length is greater than 3000 AAs
+SeqLen<-as.numeric(lapply(fullseqAA,length))
+qplot(SeqLen, binwidth = 50)+theme_bw()
+
+KeepSeq<-SeqLen>3000
+seqAA<-seqAlign[KeepSeq,]
+```
+
 
 ```{r}
 seqAlign<-muscle(seqAA,quiet=F)

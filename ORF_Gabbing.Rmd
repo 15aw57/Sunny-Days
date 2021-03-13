@@ -8,7 +8,8 @@ output: html_notebook
 sample_seq<-read.fasta("./input/sample_sequence.fasta")
 sample_seq <- unlist(sample_seq, use.names = F)
 sample_seq <- paste(sample_seq, collapse = "")
-miracle<- grep("atg([actg]{3,3})+?((taa)|(tag)|(tga))",sample_seq, value = TRUE)
+sample_seq<-gsub("([actg])","\\U\\1",sample_seq,perl=T)
+miracle<- gsub("(ATG([ACTG]{3,3})+?((TAA)|(TAG)|(TGA)))","hello this is an ORF!!!!!!!!!!!",sample_seq)
 miracle
 
 #or

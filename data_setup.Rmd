@@ -77,6 +77,7 @@ PhyloTree = nj(seqDM) #Build a phylogeny using neighbour-joining method <- <-
 #Use regex and stringi to select strain vector from dataset
 Vect = stri_extract_all(PhyloTree$tip.label, regex= "Culex|Homo sapiens|Culiseta|Corvus|Aves|Aedes|Culicidae",
                         mode = "all", simplify =TRUE) 
+Vect<-sub("\\w+\\s+\\|(\\w+|\\w+\\s\\w+)\\|(\\w+|\\w+\\s\\w+)\\|.+","\\1",PhyloTree$tip.label) #uses regex to capture country 
 
 Groups = split(PhyloTree$tip.label, Vect) #Separate vector from strain name
 
@@ -89,10 +90,13 @@ str(col) #Display "col" information to ensure groups were properly formed
 ```{r}
 ggtree(col, layout="rectangular", aes(color = group))
 ```
+
 ```{r}
 #Two genomes were missing the country, so I checked the research papers where the data was published and added in the missing countries to our dataset (Kenya and Czech Republic)
 
 Country = stri_extract_all(PhyloTree$tip.label, regex= "USA|Australia|South Africa|Israel|Russia|India|Madagascar|Azerbaijan|Ukraine|Czech Republic|Kenya", mode = "all", simplify =TRUE) 
+
+#Country<-sub("\\w+\\s+\\|(\\w+|\\w+\\s\\w+)\\|(\\w+|\\w+\\s\\w+)\\|.+","\\2",PhyloTree$tip.label) #uses regex to capture country 
 
 CountryGroups = split(PhyloTree$tip.label, Country)
 Ccol = groupOTU(PhyloTree,CountryGroups)
@@ -100,19 +104,20 @@ str(Ccol) #Extra group category 0 is being created for some reason
 ```
 
 ```{r}
-ggtree(Ccol, layout="circular", branch.length = "none", aes(color = group))
+ggtree(Ccol, layout="rectangular", branch.length = "none", aes(color = group))
 ```
 
-
-
+###Minimum Evolution Tree
 ```{r}
-#OG code
-#Country<-sub("\\w+\\s+\\|(\\w+|\\w+\\s\\w+)\\|(\\w+|\\w+\\s\\w+)\\|.+","\\2",PhyloTree$tip.label) #uses regex to capture country 
-#there is an error in this pattern - 2 strains not captured 
+MEtree<-fastme.bal(seqDM)
 
-#PhyloTree$tip.label[28] #show no country 
-#PhyloTree$tip.label[45] 
-#head(Country) 
+Country1<-sub("\\w+\\s+\\|(\\w+|\\w+\\s\\w+)\\|(\\w+|\\w+\\s\\w+)\\|.+","\\2",MEtree$tip.label) #uses regex to capture country 
+
+CountryGroups1 = split(MEtree$tip.label, Country)
+MECcol = groupOTU(MEtree,CountryGroups1)
+str(MECcol)
+ggtree(MECcol, layout="rectangular",branch.length = "none", aes(color = group))
 ```
+
 
 

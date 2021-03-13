@@ -119,7 +119,7 @@ str(MECcol)
 ggtree(MECcol, layout="rectangular",branch.length = "none", aes(color = group))
 ```
 
-### Nucleotide sequence code ###
+### Nucleotide sequence code 
 ```{r pressure, echo=FALSE}
 NucSeq <- readDNAStringSet("./input/e_protein/WNV_ENucleotide_Seqs.fa")
 NucSeqDF <- data.frame(NucSeq)
@@ -129,18 +129,21 @@ fullseqDNA<-sapply(NucSeqDF$seq,strsplit,split="")
 names(fullseqDNA)<-NucSeqDF$`WNV E Protein Variant`  
 fullseqDNA<- as.DNAbin(fullseqDNA)
 ```
-```{r}
-seqAlign<-muscle(fullseqDNA,quiet=F)
-alview(seqAlign)
-monopic <- image.DNAbin(seqAlign, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T)
-```
-
 
 ```{r}
 # Check sequence length - keep only if length is greater than 3000 AAs
-SeqLen<-as.numeric(lapply(fullseqDNA,length))
+SeqLen<-as.numeric(lapply(fullseqDNA,length)) 
 qplot(SeqLen, binwidth = 50)+theme_bw() # one very large sequence.
 
 KeepSeq<-SeqLen<1600
 fullseqDNA<-seqAlign[SeqLen<1600,]
 ```
+
+
+```{r}
+seqAlign<-muscle(fullseqDNA,quiet=F)
+alview(seqAlign)
+monopic <- image.DNAbin(seqAlign, what = c("a","g","c","t","-"),col = viridis(5), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = F, cex.lab = 0.5, legend = T)
+```
+
+

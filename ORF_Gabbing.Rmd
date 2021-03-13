@@ -5,6 +5,16 @@ output: html_notebook
 
 
 ```{r}
+sample_seq<-read.fasta("./input/sample_sequence.fasta")
+sample_seq <- unlist(sample_seq, use.names = F)
+sample_seq <- paste(sample_seq, collapse = "")
+miracle<- grep("atg([actg]{3,3})+?((taa)|(tag)|(tga))",sample_seq, value = TRUE)
+
+#or
+(ATG([ACTG]{3,3})+?((TAA)|(TAG)|(TGA)){1,3})
+#or
+grep((ATG([ACTG]{3,3}){1,3}?((TAA)|(TAG)|(TGA)), value = TRUE
+      
 
 ```
 

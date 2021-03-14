@@ -21,6 +21,7 @@ library(wesanderson)
 library(viridis)
 library(ggplot2)
 library(stringi)
+library(treeio)
 ```
 
 
@@ -144,6 +145,43 @@ fullseqDNA<-seqAlign[SeqLen<1600,]
 seqAlign<-muscle(fullseqDNA,quiet=F)
 alview(seqAlign)
 monopic <- image.DNAbin(seqAlign, what = c("a","g","c","t","-"),col = viridis(5), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = F, cex.lab = 0.5, legend = T)
+```
+
+### Country Phylogeny
+
+```{r}
+MEtree<-fastme.bal(seqDM)
+
+Country1<-sub("\\w+\\s+\\|(\\w+|\\w+\\s\\w+)\\|(\\w+|\\w+\\s\\w+)\\|.+","\\2",MEtree$tip.label) #uses regex to capture country 
+
+CountryGroups1 = split(MEtree$tip.label, Country)
+MECcol = groupOTU(MEtree,CountryGroups1)
+str(MECcol)
+ggtree(MECcol, layout="rectangular",branch.length = "none", aes(color = group))
+```
+
+### Vector Phylogeny
+
+
+```{r}
+PhyloTree = nj(seqDM) #Build a phylogeny using neighbour-joining method 
+```
+
+```{r}
+#Use regex and stringi to select strain vector from dataset
+Vect = stri_extract_all(PhyloTree$tip.label, regex= "Accipiter|Corvus|Aves|Accipitridae|Anser|Aquila|Branta|Bubo|Buteo|Butorides|Cardinalis|Carpodacus|Ciconiidae|Colaptes|Columbia|Columbidae|Corvidae|Cyanocitta|Dumetella|Falco|Gallus|Laridae|Mimus|Passer|Passeridae|Passeriformes|Phalacrocorax|Phoenicopterus|Pica|Poecile|Quiscalus|Sciuridae|Turdus|Zenaida|Columba",
+                        mode = "all", simplify =TRUE) 
+
+Groups = split(PhyloTree$tip.label, Vect) #Separate vector from strain name
+
+col = groupOTU(PhyloTree,Groups) #Create a group composed of vectors
+
+str(col) #Display "col" information to ensure groups were properly formed
+
+```
+
+```{r}
+ggtree(col, layout="rectangular",branch.length = "none",mapping = aes(color = group))
 ```
 
 

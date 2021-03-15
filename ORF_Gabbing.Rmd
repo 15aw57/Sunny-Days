@@ -9,13 +9,15 @@ sample_seq<-read.fasta("./input/sample_sequence.fasta")
 sample_seq <- unlist(sample_seq, use.names = F)
 sample_seq <- paste(sample_seq, collapse = "")
 sample_seq<-gsub("([actg])","\\U\\1",sample_seq,perl=T)
-miracle<- gsub("(ATG([ACTG]{3,3})+?((TAA)|(TAG)|(TGA)))","hello this is an ORF!!!!!!!!!!!",sample_seq)
-miracle
+?regmatches()
 
-#or
-(ATG([ACTG]{3,3})+?((TAA)|(TAG)|(TGA)){1,3})
-#or
-grep((ATG([ACTG]{3,3}){1,3}?((TAA)|(TAG)|(TGA)), value = TRUE
+m <- gregexpr("(ATG([ACTG]{3,3})*?((TAA)|(TAG)|(TGA)))",sample_seq)
+n <- gregexpr("(ATG([ATGC]{3})+?(TAA|TAG|TGA)+?)",sample_seq)
+o <- gregexpr("(ATG([ACTG]{3,3})+?((TAA)|(TAG)|(TGA)){1,3})",sample_seq)
+p <- gregexpr("(ATG([ACTG]{3,3}){1,3}?((TAA)|(TAG)|(TGA)))",sample_seq)
+
+hi <- regmatches(sample_seq,n)
+hi
       
 
 ```

@@ -48,7 +48,6 @@ epro_seq <- unlist(substr(seqDF$seq, start = 598, stop = 791))
 eproAA<-sapply(epro_seq,strsplit,split="")
 names(eproAA) <- seqDF$`WNV Variant`
 eproAA <- as.AAbin(eproAA)
-?strsplit
 ```
 
 ```{r protein sequence alignments}
@@ -66,6 +65,44 @@ epro_alignment_visual <- image.AAbin(eproAA_align, bg = (wes_palette("Darjeeling
 
 ```
 
+```{r distance matrices}
+## C protein distance matrix. ##
+CproDM<-dist.aa(eproAA_align) # generate distance matrix based on AA sequences.
+CproDMmat<-as.matrix(CproDM) # convert to matrix format.
+dim(CproDMmat) # 104 x 104
+
+# Melt to a linear matrix and generate distance matrix visual.
+library(reshape2)
+CproDMlmat<-melt(CproDMmat) # Linear matrix.
+CproDMvis<-ggplot(data=CproDMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_gradientn(colours=c("white","blue","green","red")) + theme(text = element_text(size=5),
+        axis.text.x = element_text(angle=90, hjust=1)) + ggtitle("C Protein Distance Matrix")
+
+
+
+## prM protein distance matrix. ##
+prMproDM<-dist.aa(prMproAA_align) # generate distance matrix based on AA sequences.
+prMproDMmat<-as.matrix(prMproDM) # convert to matrix format.
+dim(prMproDMmat) # 104 x 104
+
+# Melt to a linear matrix and generate distance matrix visual.
+library(reshape2)
+prMproDMlmat<-melt(prMproDMmat) # Linear matrix.
+prMproDMvis<-ggplot(data=prMproDMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_gradientn(colours=c("white","blue","green","red")) + theme(text = element_text(size=5),
+        axis.text.x = element_text(angle=90, hjust=1)) + ggtitle("prM Protein Distance Matrix")
+
+
+## E protein distance matrix. ##
+eproDM<-dist.aa(eproAA_align) # generate distance matrix based on AA sequences.
+eproDMmat<-as.matrix(eproDM) # convert to matrix format.
+dim(eproDMmat) # 104 x 104
+
+# Melt to a linear matrix and generate distance matrix visual.
+library(reshape2)
+eproDMlmat<-melt(eproDMmat) # Linear matrix.
+eproDMvis<-ggplot(data=eproDMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_gradientn(colours=c("white","blue","green","red")) + theme(text = element_text(size=5),
+        axis.text.x = element_text(angle=90, hjust=1)) + ggtitle("E Protein Distance Matrix")
+
+```
 
 ### Old code ###
 ```{r initial alignments}
@@ -83,21 +120,6 @@ epro_alignment_visual <- image.AAbin(eproAA_align, bg = (wes_palette("Darjeeling
 #seqAA<-seqAlign[KeepSeq,]
 ```
 
-```{r distance matrices}
-## Generate a distance matrix.
-
-seqDM<-dist.aa(seqAlign) # generate distance matrix based on AA sequences.
-class(seqDM) # Dist
-length(seqDM) # 2346
-
-seqDMmat<-as.matrix(seqDM) # convert to matrix format.
-dim(seqDMmat) # 69 x 69
-
-## Melt to a linear matrix.
-library(reshape2)
-DMMat<-melt(seqDMmat) # Linear matrix.
-ggplot(data=DMMat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_gradientn(colours=c("white","blue","green","red")) # Visualization not working.
-```
 #### Group Vector Information and create Phylogeny
 
 **I am not too sure what stuff is redundant here so I will leave it to someone else to clean up!)**

@@ -36,7 +36,6 @@ cpro_seq<- unlist(substr(seqDF$seq, start = 6, stop = 123))
 cproAA<-sapply(cpro_seq,strsplit,split="")
 names(cproAA) <- seqDF$`WNV Variant`
 cproAA <- as.AAbin(cproAA)
-str(cprodf)
 
 prMpro_seq <- unlist(substr(seqDF$seq, start = 217, stop = 290))
 prMproAA<-sapply(prMpro_seq,strsplit,split="")
@@ -103,6 +102,15 @@ eproDMvis<-ggplot(data=eproDMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() +
         axis.text.x = element_text(angle=90, hjust=1)) + ggtitle("E Protein Distance Matrix")
 
 ```
+```{r data cleanup/removal of abberant seqs}
+# Check sequence lengths.
+SeqLen<-as.numeric(lapply(seqDF$seq,length)) # Length isn't the right function here.
+qplot(SeqLen, binwidth = 50)+theme_bw()
+
+
+#KeepSeq<-SeqLen>3000
+#seqAA<-seqAlign[KeepSeq,]
+```
 
 ### Old code ###
 ```{r initial alignments}
@@ -111,14 +119,6 @@ eproDMvis<-ggplot(data=eproDMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() +
 #monopic <- image.AAbin(seqAlign, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
 ```
 
-```{r data cleanup/removal of abberant seqs}
-# Check sequence length - keep only if length is greater than 3000 AAs
-#SeqLen<-as.numeric(lapply(fullseqAA,length))
-#qplot(SeqLen, binwidth = 50)+theme_bw()
-
-#KeepSeq<-SeqLen>3000
-#seqAA<-seqAlign[KeepSeq,]
-```
 
 #### Group Vector Information and create Phylogeny
 

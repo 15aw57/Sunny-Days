@@ -26,7 +26,7 @@ library(treeio)
 
 
 ### Amino acid sequence code ####
-```{r pressure, echo=FALSE}
+```{r data import, echo=FALSE}
 seq <- readAAStringSet("./input/master_aa_seqs.fa")
 seqDF <- data.frame(seq)
 names(seqDF) <- c("seq")
@@ -55,13 +55,13 @@ eproAA <- as.AAbin(eproAA)
 ```
 
 
-```{r}
+```{r initial alignments}
 seqAlign<-muscle(seqAA,quiet=F)
 alview(seqAlign)
 monopic <- image.AAbin(seqAlign, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
 ```
 
-```{r}
+```{r data cleanup/removal of abberant seqs}
 # Check sequence length - keep only if length is greater than 3000 AAs
 SeqLen<-as.numeric(lapply(fullseqAA,length))
 qplot(SeqLen, binwidth = 50)+theme_bw()
@@ -70,7 +70,7 @@ KeepSeq<-SeqLen>3000
 seqAA<-seqAlign[KeepSeq,]
 ```
 
-```{r}
+```{r distance matrices}
 ## Generate a distance matrix.
 
 seqDM<-dist.aa(seqAlign) # generate distance matrix based on AA sequences.
@@ -87,11 +87,13 @@ ggplot(data=DMMat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_grad
 ```
 #### Group Vector Information and create Phylogeny
 
-```{r}
+**I am not too sure what stuff is redundant here so I will leave it to someone else to clean up!)**
+
+```{r NJ phylogenetic tree setup}
 PhyloTree = nj(seqDM) #Build a phylogeny using neighbour-joining method <- <- 
 ```
 
-```{r}
+```{r group by country}
 
 #Use regex and stringi to select strain vector from dataset
 Vect = stri_extract_all(PhyloTree$tip.label, regex= "Culex|Homo sapiens|Culiseta|Corvus|Aves|Aedes|Culicidae",
@@ -106,11 +108,10 @@ str(col) #Display "col" information to ensure groups were properly formed
 
 ```
 
-```{r}
-ggtree(col, layout="rectangular", aes(color = group))
-```
 
-```{r}
+```{r country tree}
+ggtree(col, layout="rectangular", aes(color = group))
+
 #Two genomes were missing the country, so I checked the research papers where the data was published and added in the missing countries to our dataset (Kenya and Czech Republic)
 
 Country = stri_extract_all(PhyloTree$tip.label, regex= "USA|Australia|South Africa|Israel|Russia|India|Madagascar|Azerbaijan|Ukraine|Czech Republic|Kenya", mode = "all", simplify =TRUE) 
@@ -120,14 +121,13 @@ Country = stri_extract_all(PhyloTree$tip.label, regex= "USA|Australia|South Afri
 CountryGroups = split(PhyloTree$tip.label, Country)
 Ccol = groupOTU(PhyloTree,CountryGroups)
 str(Ccol) #Extra group category 0 is being created for some reason
-```
 
-```{r}
 ggtree(Ccol, layout="rectangular", branch.length = "none", aes(color = group))
 ```
 
-###Minimum Evolution Tree
-```{r}
+
+### Minimum Evolution Tree
+```{r ME Country Tree}
 MEtree<-fastme.bal(seqDM)
 
 Country1<-sub("\\w+\\s+\\|(\\w+|\\w+\\s\\w+)\\|(\\w+|\\w+\\s\\w+)\\|.+","\\2",MEtree$tip.label) #uses regex to capture country 
@@ -138,54 +138,14 @@ str(MECcol)
 ggtree(MECcol, layout="rectangular",branch.length = "none", aes(color = group))
 ```
 
-### Nucleotide sequence code 
-```{r pressure, echo=FALSE}
-NucSeq <- readDNAStringSet("./input/e_protein/WNV_ENucleotide_Seqs.fa")
-NucSeqDF <- data.frame(NucSeq)
-names(NucSeqDF) <- c("seq")
-NucSeqDF <- cbind("WNV E Protein Variant" = rownames(NucSeqDF), NucSeqDF)
-fullseqDNA<-sapply(NucSeqDF$seq,strsplit,split="")
-names(fullseqDNA)<-NucSeqDF$`WNV E Protein Variant`  
-fullseqDNA<- as.DNAbin(fullseqDNA)
-```
-
-```{r}
-# Check sequence length - keep only if length is greater than 3000 AAs
-SeqLen<-as.numeric(lapply(fullseqDNA,length)) 
-qplot(SeqLen, binwidth = 50)+theme_bw() # one very large sequence.
-
-KeepSeq<-SeqLen<1600
-fullseqDNA<-seqAlign[SeqLen<1600,]
-```
-
-
-```{r}
-seqAlign<-muscle(fullseqDNA,quiet=F)
-alview(seqAlign)
-monopic <- image.DNAbin(seqAlign, what = c("a","g","c","t","-"),col = viridis(5), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = F, cex.lab = 0.5, legend = T)
-```
-
-### Country Phylogeny
-
-```{r}
-MEtree<-fastme.bal(seqDM)
-
-Country1<-sub("\\w+\\s+\\|(\\w+|\\w+\\s\\w+)\\|(\\w+|\\w+\\s\\w+)\\|.+","\\2",MEtree$tip.label) #uses regex to capture country 
-
-CountryGroups1 = split(MEtree$tip.label, Country)
-MECcol = groupOTU(MEtree,CountryGroups1)
-str(MECcol)
-ggtree(MECcol, layout="rectangular",branch.length = "none", aes(color = group))
-```
 
 ### Vector Phylogeny
 
-
-```{r}
+```{r intial strain tree}
 PhyloTree = nj(seqDM) #Build a phylogeny using neighbour-joining method 
 ```
 
-```{r}
+```{r group by strain vector}
 #Use regex and stringi to select strain vector from dataset
 Vect = stri_extract_all(PhyloTree$tip.label, regex= "Accipiter|Corvus|Aves|Accipitridae|Anser|Aquila|Branta|Bubo|Buteo|Butorides|Cardinalis|Carpodacus|Ciconiidae|Colaptes|Columbia|Columbidae|Corvidae|Cyanocitta|Dumetella|Falco|Gallus|Laridae|Mimus|Passer|Passeridae|Passeriformes|Phalacrocorax|Phoenicopterus|Pica|Poecile|Quiscalus|Sciuridae|Turdus|Zenaida|Columba",
                         mode = "all", simplify =TRUE) 
@@ -198,7 +158,7 @@ str(col) #Display "col" information to ensure groups were properly formed
 
 ```
 
-```{r}
+```{r plot by strain vector}
 ggtree(col, layout="rectangular",branch.length = "none",mapping = aes(color = group))
 ```
 

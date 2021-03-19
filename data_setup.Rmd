@@ -38,6 +38,7 @@ cprodf <- as.data.frame(cprodf)
 cproAA<-sapply(cprodf$cpro_seq,strsplit,split="")
 names(cproAA) <- seqDF$`WNV Variant`
 cproAA <- as.AAbin(cproAA)
+str(cprodf)
 
 prMpro_seq <- unlist(substr(seqDF$seq, start = 217, stop = 290))
 prMprodf <- cbind("WNV Variant" = rownames(seqDF), prMpro_seq)
@@ -52,22 +53,39 @@ eprodf <- as.data.frame(eprodf)
 eproAA<-sapply(eprodf$epro_seq,strsplit,split="")
 names(eproAA) <- seqDF$`WNV Variant`
 eproAA <- as.AAbin(eproAA)
+?strsplit
+```
+
+```{r protein sequence alignments}
+## C protein muscle aligment ## 
+cproAA_align<-muscle(cproAA,quiet=F)
+cpro_alignment_visual <- image.AAbin(cproAA_align, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
+
+## prM protein muscle alignment ##
+prMproAA_align<-muscle(prMproAA,quiet=F)
+prMpro_alignment_visual <- image.AAbin(prMproAA_align, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
+
+## E protein muscle alignment ## 
+eproAA_align<-muscle(eproAA,quiet=F)
+epro_alignment_visual <- image.AAbin(eproAA_align, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
+
 ```
 
 
+### Old code ###
 ```{r initial alignments}
-seqAlign<-muscle(seqAA,quiet=F)
-alview(seqAlign)
-monopic <- image.AAbin(seqAlign, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
+#seqAlign<-muscle(seqAA,quiet=F)
+#alview(seqAlign)
+#monopic <- image.AAbin(seqAlign, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
 ```
 
 ```{r data cleanup/removal of abberant seqs}
 # Check sequence length - keep only if length is greater than 3000 AAs
-SeqLen<-as.numeric(lapply(fullseqAA,length))
-qplot(SeqLen, binwidth = 50)+theme_bw()
+#SeqLen<-as.numeric(lapply(fullseqAA,length))
+#qplot(SeqLen, binwidth = 50)+theme_bw()
 
-KeepSeq<-SeqLen>3000
-seqAA<-seqAlign[KeepSeq,]
+#KeepSeq<-SeqLen>3000
+#seqAA<-seqAlign[KeepSeq,]
 ```
 
 ```{r distance matrices}

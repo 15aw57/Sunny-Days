@@ -26,13 +26,31 @@ library(stringi)
 
 ### Amino acid sequence code ####
 ```{r pressure, echo=FALSE}
-seq <- readAAStringSet("./input/sequence.fa")
+seq <- readAAStringSet("./input/master_aa_seqs.fa")
 seqDF <- data.frame(seq)
 names(seqDF) <- c("seq")
 seqDF <- cbind("WNV Variant" = rownames(seqDF), seqDF)
-fullseqAA<-sapply(seqDF$seq,strsplit,split="")
-names(fullseqAA)<-seqDF$`WNV Variant`  # Removed paste bc it wasn't conserving the sequence names and was affecting my distance matrix visualization.
-fullseqAA<- as.AAbin(seqAA)
+
+cpro_seq<- unlist(substr(seqDF$seq, start = 6, stop = 123))
+cprodf <- cbind("WNV Variant" = rownames(seqDF), cpro_seq)
+cprodf <- as.data.frame(cprodf)
+cproAA<-sapply(cprodf$cpro_seq,strsplit,split="")
+names(cproAA) <- seqDF$`WNV Variant`
+cproAA <- as.AAbin(cproAA)
+
+prMpro_seq <- unlist(substr(seqDF$seq, start = 217, stop = 290))
+prMprodf <- cbind("WNV Variant" = rownames(seqDF), prMpro_seq)
+prMprodf <- as.data.frame(prMprodf)
+prMproAA<-sapply(prMprodf$prMpro_seq,strsplit,split="")
+names(prMproAA) <- seqDF$`WNV Variant`
+prMprodf_AA <- as.AAbin(prMproAA)
+
+epro_seq <- unlist(substr(seqDF$seq, start = 598, stop = 791))
+eprodf <- cbind("WNV Variant" = rownames(seqDF), epro_seq)
+eprodf <- as.data.frame(eprodf)
+eproAA<-sapply(eprodf$epro_seq,strsplit,split="")
+names(eproAA) <- seqDF$`WNV Variant`
+eprodf_AA <- as.AAbin(eproAA)
 ```
 
 

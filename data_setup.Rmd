@@ -44,14 +44,14 @@ prMprodf <- cbind("WNV Variant" = rownames(seqDF), prMpro_seq)
 prMprodf <- as.data.frame(prMprodf)
 prMproAA<-sapply(prMprodf$prMpro_seq,strsplit,split="")
 names(prMproAA) <- seqDF$`WNV Variant`
-prMprodf_AA <- as.AAbin(prMproAA)
+prMproAA <- as.AAbin(prMproAA)
 
 epro_seq <- unlist(substr(seqDF$seq, start = 598, stop = 791))
 eprodf <- cbind("WNV Variant" = rownames(seqDF), epro_seq)
 eprodf <- as.data.frame(eprodf)
 eproAA<-sapply(eprodf$epro_seq,strsplit,split="")
 names(eproAA) <- seqDF$`WNV Variant`
-eprodf_AA <- as.AAbin(eproAA)
+eproAA <- as.AAbin(eproAA)
 ```
 
 

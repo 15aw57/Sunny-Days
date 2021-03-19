@@ -32,6 +32,16 @@ seqDF <- data.frame(seq)
 names(seqDF) <- c("seq")
 seqDF <- cbind("WNV Variant" = rownames(seqDF), seqDF)
 
+## Data cleanup/removal of abberant seqs
+# Check sequence lengths.
+SeqLen<-as.numeric(lapply(seqDF$seq,nchar))
+qplot(SeqLen, binwidth = 50)+theme_bw() # There are two sequences that are drastically different lengths than the rest. I will remove these:
+KeepSeq<-SeqLen>3000
+seqDF<-seqDF[KeepSeq,]
+
+
+## Isolating structural proteins.
+
 cpro_seq<- unlist(substr(seqDF$seq, start = 6, stop = 123))
 cproAA<-sapply(cpro_seq,strsplit,split="")
 names(cproAA) <- seqDF$`WNV Variant`
@@ -104,15 +114,10 @@ eproDMvis<-ggplot(data=eproDMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() +
 ```
 ```{r data cleanup/removal of abberant seqs}
 # Check sequence lengths.
-#SeqLen<-as.numeric(lapply(seqDF$seq,length)) # Length isn't the right function here. Since the object type is a character vector, I have to use nchar().
 SeqLen<-as.numeric(lapply(seqDF$seq,nchar))
-qplot(SeqLen, binwidth = 50)+theme_bw()
-
-
-
-
-#KeepSeq<-SeqLen>3000
-#seqAA<-seqAlign[KeepSeq,]
+qplot(SeqLen, binwidth = 50)+theme_bw() # There are two sequences that are drastically different lengths than the rest. I will remove these:
+KeepSeq<-SeqLen>3000
+seqAA<-seqAlign[KeepSeq,]
 ```
 
 ### Old code ###

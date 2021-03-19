@@ -22,6 +22,7 @@ library(viridis)
 library(ggplot2)
 library(stringi)
 library(treeio)
+library(reshape2)
 ```
 
 
@@ -81,7 +82,6 @@ CproDMmat<-as.matrix(CproDM) # convert to matrix format.
 dim(CproDMmat) # 104 x 104
 
 # Melt to a linear matrix and generate distance matrix visual.
-library(reshape2)
 CproDMlmat<-melt(CproDMmat) # Linear matrix.
 CproDMvis<-ggplot(data=CproDMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_gradientn(colours=c("white","blue","green","red")) + theme(text = element_text(size=5),
         axis.text.x = element_text(angle=90, hjust=1)) + ggtitle("C Protein Distance Matrix")
@@ -94,7 +94,6 @@ prMproDMmat<-as.matrix(prMproDM) # convert to matrix format.
 dim(prMproDMmat) # 104 x 104
 
 # Melt to a linear matrix and generate distance matrix visual.
-library(reshape2)
 prMproDMlmat<-melt(prMproDMmat) # Linear matrix.
 prMproDMvis<-ggplot(data=prMproDMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_gradientn(colours=c("white","blue","green","red")) + theme(text = element_text(size=5),
         axis.text.x = element_text(angle=90, hjust=1)) + ggtitle("prM Protein Distance Matrix")
@@ -106,18 +105,10 @@ eproDMmat<-as.matrix(eproDM) # convert to matrix format.
 dim(eproDMmat) # 104 x 104
 
 # Melt to a linear matrix and generate distance matrix visual.
-library(reshape2)
 eproDMlmat<-melt(eproDMmat) # Linear matrix.
 eproDMvis<-ggplot(data=eproDMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_gradientn(colours=c("white","blue","green","red")) + theme(text = element_text(size=5),
         axis.text.x = element_text(angle=90, hjust=1)) + ggtitle("E Protein Distance Matrix")
 
-```
-```{r data cleanup/removal of abberant seqs}
-# Check sequence lengths.
-SeqLen<-as.numeric(lapply(seqDF$seq,nchar))
-qplot(SeqLen, binwidth = 50)+theme_bw() # There are two sequences that are drastically different lengths than the rest. I will remove these:
-KeepSeq<-SeqLen>3000
-seqAA<-seqAlign[KeepSeq,]
 ```
 
 ### Old code ###

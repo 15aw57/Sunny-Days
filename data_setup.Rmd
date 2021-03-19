@@ -104,8 +104,11 @@ eproDMvis<-ggplot(data=eproDMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() +
 ```
 ```{r data cleanup/removal of abberant seqs}
 # Check sequence lengths.
-SeqLen<-as.numeric(lapply(seqDF$seq,length)) # Length isn't the right function here.
+#SeqLen<-as.numeric(lapply(seqDF$seq,length)) # Length isn't the right function here. Since the object type is a character vector, I have to use nchar().
+SeqLen<-as.numeric(lapply(seqDF$seq,nchar))
 qplot(SeqLen, binwidth = 50)+theme_bw()
+
+
 
 
 #KeepSeq<-SeqLen>3000

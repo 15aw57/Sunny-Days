@@ -33,23 +33,18 @@ names(seqDF) <- c("seq")
 seqDF <- cbind("WNV Variant" = rownames(seqDF), seqDF)
 
 cpro_seq<- unlist(substr(seqDF$seq, start = 6, stop = 123))
-cprodf <- cbind("WNV Variant" = rownames(seqDF), cpro_seq)
-cprodf <- as.data.frame(cprodf)
-cproAA<-sapply(cprodf$cpro_seq,strsplit,split="")
+cproAA<-sapply(cpro_seq,strsplit,split="")
 names(cproAA) <- seqDF$`WNV Variant`
 cproAA <- as.AAbin(cproAA)
 
 prMpro_seq <- unlist(substr(seqDF$seq, start = 217, stop = 290))
-prMprodf <- cbind("WNV Variant" = rownames(seqDF), prMpro_seq)
-prMprodf <- as.data.frame(prMprodf)
-prMproAA<-sapply(prMprodf$prMpro_seq,strsplit,split="")
+prMproAA<-sapply(prMpro_seq,strsplit,split="")
 names(prMproAA) <- seqDF$`WNV Variant`
 prMproAA <- as.AAbin(prMproAA)
 
+
 epro_seq <- unlist(substr(seqDF$seq, start = 598, stop = 791))
-eprodf <- cbind("WNV Variant" = rownames(seqDF), epro_seq)
-eprodf <- as.data.frame(eprodf)
-eproAA<-sapply(eprodf$epro_seq,strsplit,split="")
+eproAA<-sapply(epro_seq,strsplit,split="")
 names(eproAA) <- seqDF$`WNV Variant`
 eproAA <- as.AAbin(eproAA)
 ```

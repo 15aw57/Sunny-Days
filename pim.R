@@ -12,7 +12,9 @@ my_palette = colorRampPalette(c("white", "blue"))(n = 11)
 require(gplots)
 
 #Prepare heatmaps
+svg(filename = './figures/aai.svg')
 my_palette = colorRampPalette(c("white", "dark blue"))(n = 5)
 heatmap.2(data_CDS2, trace = c("none"), density.info = c("none"), 
           breaks = c(90, 92, 94, 96, 98, 100), col = my_palette, 
           lmat = matrix(c(4,2,3,1), nrow = 2, ncol = 2), key = T, labRow = rnames, labCol = rnames)
+dev.off()

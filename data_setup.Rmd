@@ -22,6 +22,7 @@ library(viridis)
 library(ggplot2)
 library(stringi)
 library(treeio)
+library(reshape2)
 ```
 
 
@@ -32,59 +33,92 @@ seqDF <- data.frame(seq)
 names(seqDF) <- c("seq")
 seqDF <- cbind("WNV Variant" = rownames(seqDF), seqDF)
 
+## Data cleanup/removal of abberant seqs
+# Check sequence lengths.
+SeqLen<-as.numeric(lapply(seqDF$seq,nchar))
+qplot(SeqLen, binwidth = 50)+theme_bw() # There are nine sequences that are drastically different lengths than the rest. I will remove these:
+KeepSeq<-SeqLen>3000
+seqDF<-seqDF[KeepSeq,]
+
+
+## Isolating structural proteins.
+
 cpro_seq<- unlist(substr(seqDF$seq, start = 6, stop = 123))
-cprodf <- cbind("WNV Variant" = rownames(seqDF), cpro_seq)
-cprodf <- as.data.frame(cprodf)
-cproAA<-sapply(cprodf$cpro_seq,strsplit,split="")
+cproAA<-sapply(cpro_seq,strsplit,split="")
 names(cproAA) <- seqDF$`WNV Variant`
 cproAA <- as.AAbin(cproAA)
 
 prMpro_seq <- unlist(substr(seqDF$seq, start = 217, stop = 290))
-prMprodf <- cbind("WNV Variant" = rownames(seqDF), prMpro_seq)
-prMprodf <- as.data.frame(prMprodf)
-prMproAA<-sapply(prMprodf$prMpro_seq,strsplit,split="")
+prMproAA<-sapply(prMpro_seq,strsplit,split="")
 names(prMproAA) <- seqDF$`WNV Variant`
 prMproAA <- as.AAbin(prMproAA)
 
+
 epro_seq <- unlist(substr(seqDF$seq, start = 598, stop = 791))
-eprodf <- cbind("WNV Variant" = rownames(seqDF), epro_seq)
-eprodf <- as.data.frame(eprodf)
-eproAA<-sapply(eprodf$epro_seq,strsplit,split="")
+eproAA<-sapply(epro_seq,strsplit,split="")
 names(eproAA) <- seqDF$`WNV Variant`
 eproAA <- as.AAbin(eproAA)
 ```
 
+```{r protein sequence alignments}
+## C protein muscle aligment ## 
+cproAA_align<-muscle(cproAA,quiet=F)
+cpro_alignment_visual <- image.AAbin(cproAA_align, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
 
-```{r initial alignments}
-seqAlign<-muscle(seqAA,quiet=F)
-alview(seqAlign)
-monopic <- image.AAbin(seqAlign, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
-```
+## prM protein muscle alignment ##
+prMproAA_align<-muscle(prMproAA,quiet=F)
+prMpro_alignment_visual <- image.AAbin(prMproAA_align, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
 
-```{r data cleanup/removal of abberant seqs}
-# Check sequence length - keep only if length is greater than 3000 AAs
-SeqLen<-as.numeric(lapply(fullseqAA,length))
-qplot(SeqLen, binwidth = 50)+theme_bw()
+## E protein muscle alignment ## 
+eproAA_align<-muscle(eproAA,quiet=F)
+epro_alignment_visual <- image.AAbin(eproAA_align, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
 
-KeepSeq<-SeqLen>3000
-seqAA<-seqAlign[KeepSeq,]
 ```
 
 ```{r distance matrices}
-## Generate a distance matrix.
+## C protein distance matrix. ##
+CproDM<-dist.aa(eproAA_align) # generate distance matrix based on AA sequences.
+CproDMmat<-as.matrix(CproDM) # convert to matrix format.
+dim(CproDMmat) # 104 x 104
 
-seqDM<-dist.aa(seqAlign) # generate distance matrix based on AA sequences.
-class(seqDM) # Dist
-length(seqDM) # 2346
+# Melt to a linear matrix and generate distance matrix visual.
+CproDMlmat<-melt(CproDMmat) # Linear matrix.
+CproDMvis<-ggplot(data=CproDMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_gradientn(colours=c("white","blue","green","red")) + theme(text = element_text(size=5),
+        axis.text.x = element_text(angle=90, hjust=1)) + ggtitle("C Protein Distance Matrix")
 
-seqDMmat<-as.matrix(seqDM) # convert to matrix format.
-dim(seqDMmat) # 69 x 69
 
-## Melt to a linear matrix.
-library(reshape2)
-DMMat<-melt(seqDMmat) # Linear matrix.
-ggplot(data=DMMat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_gradientn(colours=c("white","blue","green","red")) # Visualization not working.
+
+## prM protein distance matrix. ##
+prMproDM<-dist.aa(prMproAA_align) # generate distance matrix based on AA sequences.
+prMproDMmat<-as.matrix(prMproDM) # convert to matrix format.
+dim(prMproDMmat) # 104 x 104
+
+# Melt to a linear matrix and generate distance matrix visual.
+prMproDMlmat<-melt(prMproDMmat) # Linear matrix.
+prMproDMvis<-ggplot(data=prMproDMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_gradientn(colours=c("white","blue","green","red")) + theme(text = element_text(size=5),
+        axis.text.x = element_text(angle=90, hjust=1)) + ggtitle("prM Protein Distance Matrix")
+
+
+## E protein distance matrix. ##
+eproDM<-dist.aa(eproAA_align) # generate distance matrix based on AA sequences.
+eproDMmat<-as.matrix(eproDM) # convert to matrix format.
+dim(eproDMmat) # 104 x 104
+
+# Melt to a linear matrix and generate distance matrix visual.
+eproDMlmat<-melt(eproDMmat) # Linear matrix.
+eproDMvis<-ggplot(data=eproDMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_gradientn(colours=c("white","blue","green","red")) + theme(text = element_text(size=5),
+        axis.text.x = element_text(angle=90, hjust=1)) + ggtitle("E Protein Distance Matrix")
+
 ```
+
+### Old code ###
+```{r initial alignments}
+#seqAlign<-muscle(seqAA,quiet=F)
+#alview(seqAlign)
+#monopic <- image.AAbin(seqAlign, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
+```
+
+
 #### Group Vector Information and create Phylogeny
 
 **I am not too sure what stuff is redundant here so I will leave it to someone else to clean up!)**

@@ -118,60 +118,7 @@ eproDMvis<-ggplot(data=eproDMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() +
 #monopic <- image.AAbin(seqAlign, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
 ```
 
-
 #### Group Vector Information and create Phylogeny
-
-**I am not too sure what stuff is redundant here so I will leave it to someone else to clean up!)**
-
-```{r NJ phylogenetic tree setup}
-PhyloTree = nj(seqDM) #Build a phylogeny using neighbour-joining method <- <- 
-```
-
-```{r group by country}
-
-#Use regex and stringi to select strain vector from dataset
-Vect = stri_extract_all(PhyloTree$tip.label, regex= "Culex|Homo sapiens|Culiseta|Corvus|Aves|Aedes|Culicidae",
-                        mode = "all", simplify =TRUE) 
-#Vect<-sub("\\w+\\s+\\|(\\w+|\\w+\\s\\w+)\\|(\\w+|\\w+\\s\\w+)\\|.+","\\1",PhyloTree$tip.label) #uses regex to capture all vectors. Only keeping here if needed in the future analysis
-
-Groups = split(PhyloTree$tip.label, Vect) #Separate vector from strain name
-
-col = groupOTU(PhyloTree,Groups) #Create a group composed of vectors
-
-str(col) #Display "col" information to ensure groups were properly formed
-
-```
-
-
-```{r country tree}
-ggtree(col, layout="rectangular", aes(color = group))
-
-#Two genomes were missing the country, so I checked the research papers where the data was published and added in the missing countries to our dataset (Kenya and Czech Republic)
-
-Country = stri_extract_all(PhyloTree$tip.label, regex= "USA|Australia|South Africa|Israel|Russia|India|Madagascar|Azerbaijan|Ukraine|Czech Republic|Kenya", mode = "all", simplify =TRUE) 
-
-#Country<-sub("\\w+\\s+\\|(\\w+|\\w+\\s\\w+)\\|(\\w+|\\w+\\s\\w+)\\|.+","\\2",PhyloTree$tip.label) #uses regex to capture country 
-
-CountryGroups = split(PhyloTree$tip.label, Country)
-Ccol = groupOTU(PhyloTree,CountryGroups)
-str(Ccol) #Extra group category 0 is being created for some reason
-
-ggtree(Ccol, layout="rectangular", branch.length = "none", aes(color = group))
-```
-
-
-### Minimum Evolution Tree
-```{r ME Country Tree}
-MEtree<-fastme.bal(seqDM)
-
-Country1<-sub("\\w+\\s+\\|(\\w+|\\w+\\s\\w+)\\|(\\w+|\\w+\\s\\w+)\\|.+","\\2",MEtree$tip.label) #uses regex to capture country 
-
-CountryGroups1 = split(MEtree$tip.label, Country)
-MECcol = groupOTU(MEtree,CountryGroups1)
-str(MECcol)
-ggtree(MECcol, layout="rectangular",branch.length = "none", aes(color = group))
-```
-
 
 ### Vector Phylogeny
 
@@ -197,3 +144,54 @@ ggtree(col, layout="rectangular",branch.length = "none",mapping = aes(color = gr
 ```
 
 
+##Phylogeny tree by country 
+```{r}
+#examples of c protein tree 
+PhyloTree<- nj(CproDM)
+
+#extracts country 
+country = stri_extract_all(PhyloTree$tip.label, regex= "USA|Australia|South Africa|Israel|Russia|India|Madagascar|Azerbaijan|Ukraine|Czech Republic|Kenya|Nigeria|Central African Republic|Democratic Republic of the Congo|Portugal|Morocco|Senegal", mode = "all", simplify =TRUE)  
+
+Groups = split(PhyloTree$tip.label, country)  #Separates country from strain name
+
+col = groupOTU(PhyloTree,Groups)  #Creates a group composed of countries 
+#str(col)
+
+ggtree(col, layout="rectangular", aes(color = group)) #creates tree 
+```
+
+##Create a function to make a phylogenetic tree for proteins 
+```{r}
+# this functions takes in the protein for the tree to be created and whether it should create a phylogenetic tree for country or vector 
+
+treefunction <- function(tree, type) {
+  PhyloTree<- nj(tree)
+  country = stri_extract_all(PhyloTree$tip.label, regex= "USA|Australia|South Africa|Israel|Russia|India|Madagascar|Azerbaijan|Ukraine|Czech Republic|Kenya|Nigeria|Central African Republic|Democratic Republic of the Congo|Portugal|Morocco|Senegal", mode = "all", simplify =TRUE)  
+
+  vect = stri_extract_all(PhyloTree$tip.label, regex= "Accipiter|Corvus|Aves|Accipitridae|Anser|Aquila|Branta|Bubo|Buteo|Butorides|Cardinalis|Carpodacus|Ciconiidae|Colaptes|Columbia|Columbidae|Corvidae|Cyanocitta|Dumetella|Falco|Gallus|Laridae|Mimus|Passer|Passeridae|Passeriformes|Phalacrocorax|Phoenicopterus|Pica|Poecile|Quiscalus|Sciuridae|Turdus|Zenaida|Columba",mode = "all", simplify =TRUE) 
+
+if (type == "country"){
+Groups = split(PhyloTree$tip.label, country) #Separate country from strain name
+}
+else if (type == "vect"){
+Groups = split(PhyloTree$tip.label, vect) #Separate vector from strain name
+}
+col = groupOTU(PhyloTree,Groups) #Creates a group
+ggtree(col, layout="rectangular", aes(color = group))#creates tree  
+}
+
+```
+
+```{r}
+#c protein trees
+treefunction(CproDM, country)
+treefunction(CproDM, vect)
+
+#prM protein trees
+treefunction(prMproDM, country)
+treefunction(prMproDM, vect)
+
+#e protein trees 
+treefunction(eproDM, country)
+treefunction(eproDM, vect)
+```

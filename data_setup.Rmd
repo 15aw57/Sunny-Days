@@ -60,6 +60,29 @@ names(eproAA) <- seqDF$`WNV Variant`
 eproAA <- as.AAbin(eproAA)
 ```
 
+###Function for Alignment and Distance Matrices
+```{r DM function} 
+DMfunction <- function(protein) {
+  align<-muscle(protein,quiet=F)
+  
+  alignmentvisual <- image.AAbin(align, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
+  
+  DM<-dist.aa(align) # generate distance matrix based on AA sequences.
+  DMmat<-as.matrix(DM) # convert to matrix format.
+dim(DMmat) # 104 x 104
+
+# Melt to a linear matrix and generate distance matrix visual.
+DMlmat<-melt(DMmat) # Linear matrix.
+ggplot(data=DMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_gradientn(colours=c("white","blue","green","red")) + theme(text = element_text(size=5),
+        axis.text.x = element_text(angle=90, hjust=1)) + ggtitle("C Protein Distance Matrix")
+}
+
+DMfunction(cproAA)
+DMfunction(prMproAA)
+DMfunction(eproAA)
+```
+
+
 ```{r protein sequence alignments}
 ## C protein muscle aligment ## 
 cproAA_align<-muscle(cproAA,quiet=F)

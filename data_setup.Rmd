@@ -25,14 +25,31 @@ library(treeio)
 library(reshape2)
 ```
 
-
 ### Amino acid sequence code ####
 ```{r data import, echo=FALSE}
 seq <- readAAStringSet("./input/master_aa_seqs.fa")
 seqDF <- data.frame(seq)
 names(seqDF) <- c("seq")
-seqDF <- cbind("WNV Variant" = rownames(seqDF), seqDF)
+```
 
+```{r}
+#Extract sequence titles to format/add information
+title = rownames(seqDF)
+title = as.data.frame(title)
+
+write.csv(names, "./input/title.csv", row.names=FALSE)
+
+#Missing Vector and Country information is added in here using accession literature 
+#File is re-saved as titlefinal
+
+WNV_Variant = read.csv("./input/titlefinal.csv")
+
+seqDF = cbind("WNV Variant" = WNV_Variant, seqDF)
+rownames(seqDF) = seqDF[,1]
+```
+
+
+```{r}
 ## Data cleanup/removal of abberant seqs
 # Check sequence lengths.
 SeqLen<-as.numeric(lapply(seqDF$seq,nchar))
@@ -45,22 +62,23 @@ seqDF<-seqDF[KeepSeq,]
 
 cpro_seq<- unlist(substr(seqDF$seq, start = 6, stop = 123))
 cproAA<-sapply(cpro_seq,strsplit,split="")
-names(cproAA) <- seqDF$`WNV Variant`
+names(cproAA) <- seqDF$Title
 cproAA <- as.AAbin(cproAA)
+
 
 prMpro_seq <- unlist(substr(seqDF$seq, start = 217, stop = 290))
 prMproAA<-sapply(prMpro_seq,strsplit,split="")
-names(prMproAA) <- seqDF$`WNV Variant`
+names(prMproAA) <- seqDF$Title
 prMproAA <- as.AAbin(prMproAA)
 
 
 epro_seq <- unlist(substr(seqDF$seq, start = 598, stop = 791))
 eproAA<-sapply(epro_seq,strsplit,split="")
-names(eproAA) <- seqDF$`WNV Variant`
+names(eproAA) <- seqDF$Title
 eproAA <- as.AAbin(eproAA)
 ```
 
-###Function for Alignment and Distance Matrices
+### Function for Alignment and Distance Matrices
 ```{r DM function} 
 DMfunction <- function(protein) {
   align<-muscle(protein,quiet=F)
@@ -109,8 +127,6 @@ CproDMlmat<-melt(CproDMmat) # Linear matrix.
 CproDMvis<-ggplot(data=CproDMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_gradientn(colours=c("white","blue","green","red")) + theme(text = element_text(size=5),
         axis.text.x = element_text(angle=90, hjust=1)) + ggtitle("C Protein Distance Matrix")
 
-
-
 ## prM protein distance matrix. ##
 prMproDM<-dist.aa(prMproAA_align) # generate distance matrix based on AA sequences.
 prMproDMmat<-as.matrix(prMproDM) # convert to matrix format.
@@ -141,57 +157,18 @@ eproDMvis<-ggplot(data=eproDMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() +
 #monopic <- image.AAbin(seqAlign, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
 ```
 
-#### Group Vector Information and create Phylogeny
+## Group Vector Information and create Phylogeny
 
-### Vector Phylogeny
-
-```{r intial strain tree}
-PhyloTree = nj(seqDM) #Build a phylogeny using neighbour-joining method 
-```
-
-```{r group by strain vector}
-#Use regex and stringi to select strain vector from dataset
-Vect = stri_extract_all(PhyloTree$tip.label, regex= "Accipiter|Corvus|Aves|Accipitridae|Anser|Aquila|Branta|Bubo|Buteo|Butorides|Cardinalis|Carpodacus|Ciconiidae|Colaptes|Columbia|Columbidae|Corvidae|Cyanocitta|Dumetella|Falco|Gallus|Laridae|Mimus|Passer|Passeridae|Passeriformes|Phalacrocorax|Phoenicopterus|Pica|Poecile|Quiscalus|Sciuridae|Turdus|Zenaida|Columba",
-                        mode = "all", simplify =TRUE) 
-
-Groups = split(PhyloTree$tip.label, Vect) #Separate vector from strain name
-
-col = groupOTU(PhyloTree,Groups) #Create a group composed of vectors
-
-str(col) #Display "col" information to ensure groups were properly formed
-
-```
-
-```{r plot by strain vector}
-ggtree(col, layout="rectangular",branch.length = "none",mapping = aes(color = group))
-```
-
-
-##Phylogeny tree by country 
-```{r}
-#examples of c protein tree 
-PhyloTree<- nj(CproDM)
-
-#extracts country 
-country = stri_extract_all(PhyloTree$tip.label, regex= "USA|Australia|South Africa|Israel|Russia|India|Madagascar|Azerbaijan|Ukraine|Czech Republic|Kenya|Nigeria|Central African Republic|Democratic Republic of the Congo|Portugal|Morocco|Senegal", mode = "all", simplify =TRUE)  
-
-Groups = split(PhyloTree$tip.label, country)  #Separates country from strain name
-
-col = groupOTU(PhyloTree,Groups)  #Creates a group composed of countries 
-#str(col)
-
-ggtree(col, layout="rectangular", aes(color = group)) #creates tree 
-```
-
-##Create a function to make a phylogenetic tree for proteins 
+### Create a function to make a phylogenetic tree for proteins 
 ```{r}
 # this functions takes in the protein for the tree to be created and whether it should create a phylogenetic tree for country or vector 
 
 treefunction <- function(tree, type) {
   PhyloTree<- nj(tree)
-  country = stri_extract_all(PhyloTree$tip.label, regex= "USA|Australia|South Africa|Israel|Russia|India|Madagascar|Azerbaijan|Ukraine|Czech Republic|Kenya|Nigeria|Central African Republic|Democratic Republic of the Congo|Portugal|Morocco|Senegal", mode = "all", simplify =TRUE)  
+  
+  country = stri_extract_all(PhyloTree$tip.label, regex= "USA|Australia|South Africa|Israel|Russia|India|Madagascar|Azerbaijan|Ukraine|Czech Republic|Kenya|Nigeria|Central African Republic|DRC|Portugal|Morocco|Senegal|Tunisia|Cyprus|Japan|France", mode = "all", simplify =TRUE)  
 
-  vect = stri_extract_all(PhyloTree$tip.label, regex= "Accipiter|Corvus|Aves|Accipitridae|Anser|Aquila|Branta|Bubo|Buteo|Butorides|Cardinalis|Carpodacus|Ciconiidae|Colaptes|Columbia|Columbidae|Corvidae|Cyanocitta|Dumetella|Falco|Gallus|Laridae|Mimus|Passer|Passeridae|Passeriformes|Phalacrocorax|Phoenicopterus|Pica|Poecile|Quiscalus|Sciuridae|Turdus|Zenaida|Columba",mode = "all", simplify =TRUE) 
+  vect = stri_extract_all(PhyloTree$tip.label, regex= "Culex|Other|Equus|Homo sapiens|Corvus|Culiseta|Ornithodoros|Mus|Hyalomma|Oriolus|Aves|Dermacentor|Aedes|Rousettus|Culicidae",mode = "all", simplify =TRUE) 
 
 if (type == "country"){
 Groups = split(PhyloTree$tip.label, country) #Separate country from strain name
@@ -207,14 +184,15 @@ ggtree(col, layout="rectangular", aes(color = group))#creates tree
 
 ```{r}
 #c protein trees
-treefunction(CproDM, country)
-treefunction(CproDM, vect)
+treefunction(CproDM, "country")
+treefunction(CproDM, "vect")
 
 #prM protein trees
-treefunction(prMproDM, country)
-treefunction(prMproDM, vect)
+treefunction(prMproDM, "country")
+treefunction(prMproDM, "vect")
 
 #e protein trees 
-treefunction(eproDM, country)
-treefunction(eproDM, vect)
+treefunction(eproDM, "country")
+treefunction(eproDM, "vect")
 ```
+

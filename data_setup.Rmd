@@ -23,6 +23,8 @@ library(ggplot2)
 library(stringi)
 library(treeio)
 library(reshape2)
+library(phytools)
+library(mapdata)
 ```
 
 ### Amino acid sequence code ####
@@ -31,6 +33,7 @@ seq <- readAAStringSet("./input/master_aa_seqs.fa")
 seqDF <- data.frame(seq)
 names(seqDF) <- c("seq")
 ```
+
 
 ```{r}
 #Extract sequence titles to format/add information
@@ -182,6 +185,7 @@ ggtree(col, layout="rectangular", aes(color = group))#creates tree
 
 ```
 
+
 ```{r}
 #c protein trees
 treefunction(CproDM, "country")
@@ -195,4 +199,12 @@ treefunction(prMproDM, "vect")
 treefunction(eproDM, "country")
 treefunction(eproDM, "vect")
 ```
+```{r}
+Cworld = read.csv("./input/Ccoord.csv")
+rownames(Cworld) = Cworld[,1]
+CproCountry = nj(CproDM)
 
+CproCountry$tip.label = stri_extract_all(CproCountry$tip.label, regex = "^.{8}",mode = "all", simplify =TRUE)
+
+obj = phylo.to.map(CproCountry,Cworld)
+``` 

@@ -112,25 +112,15 @@ AlignmentFunction <- function(protein) {
   alignmentvisual <- image.AAbin(align, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
   
 #Generate distance matrix based on AA sequences
-   if (protein == "cproAA"){
-    CproDM<-dist.aa(align)
-    paste(CproDM)
-  }
-  if (protein == "prMproAA"){
-    prMproDM<-dist.aa(align)
-    return(prMproDM)
-  }
-   if (protein == "eproAA"){
-    eproDM<-dist.aa(align)
-    return(eproDM)
-   }
+  return(dist.aa(align))
 }
 ```
 
+
 ```{r}
-AlignmentFunction(cproAA)
-AlignmentFunction(prMproAA)
-AlignmentFunction(eproAA)
+a <- AlignmentFunction(cproAA)
+b <- AlignmentFunction(prMproAA)
+c <- AlignmentFunction(eproAA)
 ```
 
 ###Function for Distance Matrix 
@@ -146,9 +136,9 @@ ggplot(data=DMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_gra
 ```
 
 ```{r}
-MatrixFunction(CproDM)
-MatrixFunction(prMproDM)
-MatrixFunction(eproDM)
+MatrixFunction(a)
+MatrixFunction(b)
+MatrixFunction(c)
 ```
 ## Group Vector Information and create Phylogeny
 

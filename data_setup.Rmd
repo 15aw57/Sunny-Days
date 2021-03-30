@@ -193,9 +193,18 @@ treefunction(eproDM, "vect")
 ```{r}
 Cworld = read.csv("./input/Ccoord.csv")
 rownames(Cworld) = Cworld[,1]
-CproCountry = nj(CproDM)
+Cworld = subset(Cworld, select = -name)
 
-CproCountry$tip.label = stri_extract_all(CproCountry$tip.label, regex = "^.{8}",mode = "all", simplify =TRUE)
+Tree = nj(CproDM)
+Tree$tip.label = stri_extract_all(Tree$tip.label, regex = "^.{8}",mode = "all", simplify =TRUE)
+Tree = phytools::midpoint.root(Tree)
 
-obj = phylo.to.map(CproCountry,Cworld)
+ phylo.to.map(Tree, Cworld,rotate = T)
 ``` 
+
+
+
+
+
+
+

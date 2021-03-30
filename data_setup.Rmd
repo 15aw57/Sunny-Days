@@ -87,7 +87,7 @@ eproAA <- as.AAbin(eproAA)
 DMfunction <- function(protein) {
   align<-muscle(protein,quiet=F)
   
-  alignmentvisual <- image.AAbin(align, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
+  alignmentvisual <- image.AAbin(align, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.2, legend = T, aa.cex = 0.8)
     DM<-dist.aa(align) # generate distance matrix based on AA sequences.
   DMmat<-as.matrix(DM) # convert to matrix format.
 
@@ -109,22 +109,22 @@ I don't know why this function does not create the new DM objects to be used in 
 ```{r DM function} 
 AlignmentFunction <- function(protein) {
   align<-muscle(protein,quiet=F)
-  alignmentvisual <- image.AAbin(align, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
+  alignmentvisual <- image.AAbin(align, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.2, legend = T, aa.cex = 0.8)
   
 #Generate distance matrix based on AA sequences
    if (protein == "cproAA"){
     CproDM<-dist.aa(align)
-    paste(CproDM)
   }
   if (protein == "prMproAA"){
     prMproDM<-dist.aa(align)
-    return(prMproDM)
   }
    if (protein == "eproAA"){
     eproDM<-dist.aa(align)
-    return(eproDM)
    }
 }
+
+
+
 ```
 
 ```{r}

@@ -114,7 +114,7 @@ AlignmentFunction <- function(protein) {
 #Generate distance matrix based on AA sequences
    if (protein == "cproAA"){
     CproDM<-dist.aa(align)
-    return(CproDM)
+    paste(CproDM)
   }
   if (protein == "prMproAA"){
     prMproDM<-dist.aa(align)

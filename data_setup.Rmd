@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r package load, warning=FALSE, message=FALSE}
+# Load required libraries.
 library(BiocManager)
 library(annotate)
 library(ape)
@@ -27,63 +28,62 @@ library(phytools)
 library(mapdata)
 ```
 
-### Amino acid sequence code ####
 ```{r data import, echo=FALSE}
-seq <- readAAStringSet("./input/master_aa_seqs.fa") #upload data file
-seqDF <- data.frame(seq) #create a data frame with the data 
-names(seqDF) <- c("seq") 
+# Data import.
+seq <- readAAStringSet("./input/master_aa_seqs.fa") # Upload data file.
+seqDF <- data.frame(seq) # Convert dataset to a data frame object.
+names(seqDF) <- c("seq") # IDK 
 ```
 
 
-```{r}
-#Extract sequence titles to format/add information
-title = rownames(seqDF)
-title = as.data.frame(title)
+```{r adding missing information}
+## Isolate sequence descriptions (e.g. sequence titles) and export to a csv file so that missing vector/country information can be added. 
 
-write.csv(names, "./input/title.csv", row.names=FALSE)
+title <- rownames(seqDF) # Create object of dataframe sequence titles (e.g. the row names of the object seqDF).
+title <- as.data.frame(title) # Convert object to a data frame. 
+write.csv(names, "./input/title.csv", row.names=FALSE) # Export sequence titles to csv file.
 
-#Missing Vector and Country information is added in here using accession literature 
-#File is re-saved as titlefinal
+# Missing vector and country information was added to the csv file using accession literature. File was resaved under the name "titlefinal".
 
-WNV_Variant = read.csv("./input/titlefinal.csv")
-
-seqDF = cbind("WNV Variant" = WNV_Variant, seqDF)
-rownames(seqDF) = seqDF[,1]
+WNV_Variant<- read.csv("./input/titlefinal.csv") # Importing file with previously missing information added in.
+seqDF <- cbind("WNVVariant" = WNV_Variant, seqDF) # Combine sequence descriptions (e.g. sequence titles) from titlefinal file with the sequence information (e.g. amino acid sequences) from the original dataframe object. 
+rownames(seqDF) <- seqDF[,1] # Identify the row names of the dataset object as the information in the first column (sequence headers).
 ```
 
 
-```{r}
-## Data cleanup/removal of abberant seqs
+```{r data cleanup}
+## To check the quality of the data and remove any abberant sequences, we checked the lengths of the sequences in the dataset and removed the few outliers that were drastically different from the rest.
 # Check sequence lengths.
-SeqLen<-as.numeric(lapply(seqDF$seq,nchar))
-qplot(SeqLen, binwidth = 50)+theme_bw() # There are nine sequences that are drastically different lengths than the rest. I will remove these:
-KeepSeq<-SeqLen>3000 #removing anything greater than 3000 in length 
-seqDF<-seqDF[KeepSeq,] #re-writing the data frame with new wanted data 
+SeqLen<-as.numeric(lapply(seqDF$seq,nchar)) # Create an object containing the length of each sequence in the dataset.
+qplot(SeqLen, binwidth = 50)+theme_bw() # Generate a bar graph of sequence lengths. There are nine sequences that are drastically different lengths than the rest; most sequences are ~3400 amino acids in length, with a few being under 3000 amino acids in length. I will remove these abberrant sequences:
+KeepSeq<-SeqLen>3000 # Keep anything greater than 3000 in length. 
+seqDF<-seqDF[KeepSeq,] # Creating a new dataset object with only sequences over 3000 amino acids long. 
 ```
 
-### Isolating structural proteins.
-```{r}
-cpro_seq<- unlist(substr(seqDF$seq, start = 6, stop = 123))
-cproAA<-sapply(cpro_seq,strsplit,split="")
-names(cproAA) <- seqDF$Title
-cproAA <- as.AAbin(cproAA)
+
+```{r isolating structural proteins}
+## To isolate the structural proteins from the full length polyprotein amino acid sequences, we used substr() and the known protein cleavage sites. We then converted each amino acid sequence into an AAbin object in preparation for a MUSCLE analysis. 
+cpro_seq<- unlist(substr(seqDF$seq, start = 6, stop = 123)) # The C protein is cleaved at sites 6 and 123.
+cproAA<-sapply(cpro_seq,strsplit,split="") # Put each amino acid into its own cell in preparation for conversion to an AAbin object.
+names(cproAA) <- seqDF$Title # Assign sequence titles as the names of each sequence. 
+cproAA <- as.AAbin(cproAA) # Convert C protein dataset to an AAbin object.
 
 
-prMpro_seq <- unlist(substr(seqDF$seq, start = 217, stop = 290))
-prMproAA<-sapply(prMpro_seq,strsplit,split="")
-names(prMproAA) <- seqDF$Title
-prMproAA <- as.AAbin(prMproAA)
+prMpro_seq <- unlist(substr(seqDF$seq, start = 217, stop = 290)) # The prM protein is cleaved at sites 217 and 290.
+prMproAA<-sapply(prMpro_seq,strsplit,split="") # Put each amino acid into its own cell in preparation for conversion to an AAbin object.
+names(prMproAA) <- seqDF$Title # Assign sequence titles as the names of each sequence. 
+prMproAA <- as.AAbin(prMproAA) # Convert prM protein dataset to an AAbin object.
 
 
-epro_seq <- unlist(substr(seqDF$seq, start = 598, stop = 791))
-eproAA<-sapply(epro_seq,strsplit,split="")
-names(eproAA) <- seqDF$Title
-eproAA <- as.AAbin(eproAA)
+epro_seq <- unlist(substr(seqDF$seq, start = 598, stop = 791)) # The E protein is cleaved at sites 598 and 791.
+eproAA<-sapply(epro_seq,strsplit,split="") # Put each amino acid into its own cell in preparation for conversion to an AAbin object.
+names(eproAA) <- seqDF$Title # Assign sequence titles as the names of each sequence. 
+eproAA <- as.AAbin(eproAA) # Convert E protein dataset to an AAbin object.
 ```
 
   
 ### Function for Alignment and Distance Matrices
-```{r DM function} 
+```{r distance matrix function} 
 DMfunction <- function(protein) {
   align<-muscle(protein,quiet=F)
   

@@ -28,40 +28,40 @@ library(mapdata)
 ```
 
 
-## Initial data import and set up.
+## Initial data import and set up. ##
 ```{r data import, echo=FALSE}
-# Data import.
-seq <- readAAStringSet("./input/master_aa_seqs.fa") # Upload data file.
-seqDF <- data.frame(seq) # Convert dataset to a data frame object.
-names(seqDF) <- c("seq") # IDK 
+## Data import.
+seq <- readAAStringSet("./input/master_aa_seqs.fa") # Upload fasta file containing the polyprotein amino acid sequences of 104 isolates of West Nile Virus.
+seqDF <- data.frame(seq) # Convert fasta file to a data frame object.
+names(seqDF) <- c("seq") # Assigning the column name of seqDF as "seq."
 ```
 
-
 ```{r adding missing information}
-## Isolate sequence descriptions (e.g. sequence titles) and export to a csv file so that missing vector/country information can be added. 
+## Add missing vector/country information to sequence titles. 
 
-title <- rownames(seqDF) # Create object of dataframe sequence titles (e.g. the row names of the object seqDF).
+title <- rownames(seqDF) # Create object containing isolated sequence titles (e.g. the row names of seqDF).
 title <- as.data.frame(title) # Convert object to a data frame. 
 write.csv(names, "./input/title.csv", row.names=FALSE) # Export sequence titles to csv file.
 
-# Missing vector and country information was added to the csv file using accession literature. File was resaved under the name "titlefinal".
+## Missing vector and country information was added to the csv file using accession literature. File was resaved under the name "titlefinal".
 
 WNV_Variant<- read.csv("./input/titlefinal.csv") # Importing file with previously missing information added in.
-seqDF <- cbind("WNVVariant" = WNV_Variant, seqDF) # Combine sequence descriptions (e.g. sequence titles) from titlefinal file with the sequence information (e.g. amino acid sequences) from the original dataframe object. 
-rownames(seqDF) <- seqDF[,1] # Identify the row names of the dataset object as the information in the first column (sequence headers).
+seqDF <- cbind("WNVVariant" = WNV_Variant, seqDF) # Combine sequence descriptions (e.g. sequence titles) from titlefinal file with the amino acid sequence information from the original dataframe object. 
+rownames(seqDF) <- seqDF[,1] # Identify the row names of the new dataset as the information in the first column (sequence headers).
 ```
-
 
 ```{r data cleanup}
 ## To check the quality of the data and remove any abberant sequences, we checked the lengths of the sequences in the dataset and removed the few outliers that were drastically different from the rest.
+
 # Check sequence lengths.
 SeqLen<-as.numeric(lapply(seqDF$seq,nchar)) # Create an object containing the length of each sequence in the dataset.
-qplot(SeqLen, binwidth = 50)+theme_bw() # Generate a bar graph of sequence lengths. There are nine sequences that are drastically different lengths than the rest; most sequences are ~3400 amino acids in length, with a few being under 3000 amino acids in length. I will remove these abberrant sequences:
+qplot(SeqLen, binwidth = 50)+theme_bw() # Generate a bar graph of sequence lengths. There are nine sequences that are drastically different in length from the rest; most sequences are ~3400 amino acids in length, with nine being under 3000 amino acids in length. I will remove these abberrant sequences:
 KeepSeq<-SeqLen>3000 # Keep anything greater than 3000 in length. 
-seqDF<-seqDF[KeepSeq,] # Creating a new dataset object with only sequences over 3000 amino acids long. 
+seqDF<-seqDF[KeepSeq,] # Create a new dataset object with only those sequences over 3000 amino acids long. 
 ```
 
-## Distance matrix and MUSCLE protein analysis.
+
+## Distance matrix and MUSCLE protein analysis. ##
 ```{r isolating structural proteins}
 ## To isolate the structural proteins from the full length polyprotein amino acid sequences, we used substr() and the known protein cleavage sites. We then converted each amino acid sequence into an AAbin object in preparation for a MUSCLE analysis and distance matrix generation. 
 
@@ -85,11 +85,12 @@ eproAA <- as.AAbin(eproAA) # Convert E protein dataset to an AAbin object.
 
 
 ```{r distance matrix and MUSCLE alignment function} 
-DMfunction <- function(protein) { #The function input is amino acid sequence dataset for each protein.
+## The following is a function for generating a distance matrix and conducting a MUSCLE alignment on an input amino acid sequence.
+DMfunction <- function(protein) { #The function input is an amino acid sequence.
   align<-muscle(protein,quiet=F) # Run a muscle alignment on the input dataset.
   
   alignmentvisual <- image.AAbin(align, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.2, legend = T, aa.cex = 0.8) # Generate a visual of the MUSCLE alignment.
-    DM<-dist.aa(align) # Generate distance matrix based on amino acid sequences.
+    DM<-dist.aa(align) # Generate a distance matrix based on amino acid sequences.
  }
 ```
 
@@ -106,26 +107,24 @@ eproDM <- DMfunction(eproAA) # Run function on E protein dataset.
 # The following function will generate a distance matrix visual:
 MatrixFunction <- function(DM) { # The input of the function is an object of class "dist".
   DMmat<-as.matrix(DM) # Convert object to matrix format.
-  
-# Melt to a linear matrix and generate distance matrix visual.
-DMlmat<-melt(DMmat) # Linear matrix.
-ggplot(data=DMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_gradientn(colours=c("white","blue","green","red")) + theme(text = element_text(size=5),
-        axis.text.x = element_text(angle=90, hjust=1)) + ggtitle("C Protein Distance Matrix") # Plot the distance matrix. Colours were chosen for greatest clarity in the visual. 
+  DMlmat<-melt(DMmat) # Melt to a linear matrix.
+  ggplot(data=DMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() +     scale_fill_gradientn(colours=c("white","blue","green","red")) + theme(text = element_text(size=5),
+  axis.text.x = element_text(angle=90, hjust=1)) + ggtitle("C Protein Distance Matrix") # Plot the distance matrix. 
 }
 ```
 
-```{r run the distance matrix visualization function on the dataset for each protein}
+```{r run the distance matrix visualization function on the distance matrix output for each protein}
 MatrixFunction(CproDM) # Generate distance matrix visual for the C protein.
 MatrixFunction(prMproDM) # Generate distance matrix visual for the prM protein.
 MatrixFunction(eproDM) # Generate distance matrix visual for the E protein.
 ```
 
-## Group vector information and create phylogeny
 
+## Group vector information and create phylogeny ##
 ```{r function for phylogenetic trees}
 # Function for generating a phylogenetic tree by country OR vector.
 
-treefunction <- function(tree, type) { # The input of this function is the distance matrix data object (type dist()) and type of phylogenetic tree (e.g. grouped by country or  vector).
+treefunction <- function(tree, type) { # The input of this function is the distance matrix data object (type dist()) and grouping type of phylogenetic tree (e.g. grouped by country or  vector).
   PhyloTree<- nj(tree) # Generate a phylogenetic tree using the Neighbour-Joining approach.
   
   country = stri_extract_all(PhyloTree$tip.label, regex= "USA|Australia|South Africa|Israel|Russia|India|Madagascar|Azerbaijan|Ukraine|Czech Republic|Kenya|Nigeria|Central African Republic|DRC|Portugal|Morocco|Senegal|Tunisia|Cyprus|Japan|France", mode = "all", simplify =TRUE)  # Object with code for extracting just the country name from the sequence titles.

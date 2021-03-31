@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r package load, warning=FALSE, message=FALSE}
+# Load required libraries.
 library(BiocManager)
 library(annotate)
 library(ape)
@@ -26,180 +27,137 @@ library(phytools)
 library(mapdata)
 ```
 
-### Amino acid sequence code ####
+
+## Initial data import and set up.
 ```{r data import, echo=FALSE}
-seq <- readAAStringSet("./input/master_aa_seqs.fa")
-seqDF <- data.frame(seq)
-names(seqDF) <- c("seq")
+# Data import.
+seq <- readAAStringSet("./input/master_aa_seqs.fa") # Upload data file.
+seqDF <- data.frame(seq) # Convert dataset to a data frame object.
+names(seqDF) <- c("seq") # IDK 
 ```
 
 
-```{r}
-#Extract sequence titles to format/add information
-title = rownames(seqDF)
-title = as.data.frame(title)
+```{r adding missing information}
+## Isolate sequence descriptions (e.g. sequence titles) and export to a csv file so that missing vector/country information can be added. 
 
-write.csv(names, "./input/title.csv", row.names=FALSE)
+title <- rownames(seqDF) # Create object of dataframe sequence titles (e.g. the row names of the object seqDF).
+title <- as.data.frame(title) # Convert object to a data frame. 
+write.csv(names, "./input/title.csv", row.names=FALSE) # Export sequence titles to csv file.
 
-#Missing Vector and Country information is added in here using accession literature 
-#File is re-saved as titlefinal
+# Missing vector and country information was added to the csv file using accession literature. File was resaved under the name "titlefinal".
 
-WNV_Variant = read.csv("./input/titlefinal.csv")
-
-seqDF = cbind("WNV Variant" = WNV_Variant, seqDF)
-rownames(seqDF) = seqDF[,1]
+WNV_Variant<- read.csv("./input/titlefinal.csv") # Importing file with previously missing information added in.
+seqDF <- cbind("WNVVariant" = WNV_Variant, seqDF) # Combine sequence descriptions (e.g. sequence titles) from titlefinal file with the sequence information (e.g. amino acid sequences) from the original dataframe object. 
+rownames(seqDF) <- seqDF[,1] # Identify the row names of the dataset object as the information in the first column (sequence headers).
 ```
 
 
-```{r}
-## Data cleanup/removal of abberant seqs
+```{r data cleanup}
+## To check the quality of the data and remove any abberant sequences, we checked the lengths of the sequences in the dataset and removed the few outliers that were drastically different from the rest.
 # Check sequence lengths.
-SeqLen<-as.numeric(lapply(seqDF$seq,nchar))
-qplot(SeqLen, binwidth = 50)+theme_bw() # There are nine sequences that are drastically different lengths than the rest. I will remove these:
-KeepSeq<-SeqLen>3000
-seqDF<-seqDF[KeepSeq,]
-
-
-## Isolating structural proteins.
-
-cpro_seq<- unlist(substr(seqDF$seq, start = 6, stop = 123))
-cproAA<-sapply(cpro_seq,strsplit,split="")
-names(cproAA) <- seqDF$Title
-cproAA <- as.AAbin(cproAA)
-
-
-prMpro_seq <- unlist(substr(seqDF$seq, start = 217, stop = 290))
-prMproAA<-sapply(prMpro_seq,strsplit,split="")
-names(prMproAA) <- seqDF$Title
-prMproAA <- as.AAbin(prMproAA)
-
-
-epro_seq <- unlist(substr(seqDF$seq, start = 598, stop = 791))
-eproAA<-sapply(epro_seq,strsplit,split="")
-names(eproAA) <- seqDF$Title
-eproAA <- as.AAbin(eproAA)
+SeqLen<-as.numeric(lapply(seqDF$seq,nchar)) # Create an object containing the length of each sequence in the dataset.
+qplot(SeqLen, binwidth = 50)+theme_bw() # Generate a bar graph of sequence lengths. There are nine sequences that are drastically different lengths than the rest; most sequences are ~3400 amino acids in length, with a few being under 3000 amino acids in length. I will remove these abberrant sequences:
+KeepSeq<-SeqLen>3000 # Keep anything greater than 3000 in length. 
+seqDF<-seqDF[KeepSeq,] # Creating a new dataset object with only sequences over 3000 amino acids long. 
 ```
 
-### Function for Alignment and Distance Matrices
-```{r DM function} 
-DMfunction <- function(protein) {
-  align<-muscle(protein,quiet=F)
-  
-  alignmentvisual <- image.AAbin(align, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
-  
-  DM<-dist.aa(align) # generate distance matrix based on AA sequences.
-  DMmat<-as.matrix(DM) # convert to matrix format.
-dim(DMmat) # 104 x 104
+## Distance matrix and MUSCLE protein analysis.
+```{r isolating structural proteins}
+## To isolate the structural proteins from the full length polyprotein amino acid sequences, we used substr() and the known protein cleavage sites. We then converted each amino acid sequence into an AAbin object in preparation for a MUSCLE analysis and distance matrix generation. 
+cpro_seq<- unlist(substr(seqDF$seq, start = 6, stop = 123)) # The C protein is cleaved at sites 6 and 123.
+cproAA<-sapply(cpro_seq,strsplit,split="") # Put each amino acid into its own cell in preparation for conversion to an AAbin object.
+names(cproAA) <- seqDF$Title # Assign sequence titles as the names of each sequence. 
+cproAA <- as.AAbin(cproAA) # Convert C protein dataset to an AAbin object.
 
+
+prMpro_seq <- unlist(substr(seqDF$seq, start = 217, stop = 290)) # The prM protein is cleaved at sites 217 and 290.
+prMproAA<-sapply(prMpro_seq,strsplit,split="") # Put each amino acid into its own cell in preparation for conversion to an AAbin object.
+names(prMproAA) <- seqDF$Title # Assign sequence titles as the names of each sequence. 
+prMproAA <- as.AAbin(prMproAA) # Convert prM protein dataset to an AAbin object.
+
+
+epro_seq <- unlist(substr(seqDF$seq, start = 598, stop = 791)) # The E protein is cleaved at sites 598 and 791.
+eproAA<-sapply(epro_seq,strsplit,split="") # Put each amino acid into its own cell in preparation for conversion to an AAbin object.
+names(eproAA) <- seqDF$Title # Assign sequence titles as the names of each sequence. 
+eproAA <- as.AAbin(eproAA) # Convert E protein dataset to an AAbin object.
+```
+
+  
+
+```{r distance matrix and MUSCLE alignment function} 
+DMfunction <- function(protein) { #The function input is amino acid sequence dataset for each protein.
+  align<-muscle(protein,quiet=F) # Run a muscle alignment on the input dataset.
+  
+  alignmentvisual <- image.AAbin(align, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.2, legend = T, aa.cex = 0.8) # Generate a visual of the MUSCLE alignment.
+    DM<-dist.aa(align) # Generate distance matrix based on amino acid sequences.
+ }
+```
+
+
+```{r run the function on the dataset for each protein}
+## Running the function on the amino acid sequences for each protein will generate a MUSCLE alignment and alignment visual for each protein, and a distance matrix for each protein.
+CproDM <- DMfunction(cproAA) # Run function on C protein dataset.
+prMproDM <- DMfunction(prMproAA) # Run function on prM protein dataset.
+eproDM <- DMfunction(eproAA) # Run function on E protein dataset.
+```
+
+
+```{r function to visualize the distance matrix}
+# The following function will generate a distance matrix visual:
+MatrixFunction <- function(DM) { # The input of the function is an object of class "dist".
+  DMmat<-as.matrix(DM) # Convert object to matrix format.
+  
 # Melt to a linear matrix and generate distance matrix visual.
 DMlmat<-melt(DMmat) # Linear matrix.
 ggplot(data=DMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_gradientn(colours=c("white","blue","green","red")) + theme(text = element_text(size=5),
-        axis.text.x = element_text(angle=90, hjust=1)) + ggtitle("C Protein Distance Matrix")
+        axis.text.x = element_text(angle=90, hjust=1)) + ggtitle("C Protein Distance Matrix") # Plot the distance matrix. Colours were chosen for greatest clarity in the visual. 
 }
-
-DMfunction(cproAA)
-DMfunction(prMproAA)
-DMfunction(eproAA)
 ```
 
-
-```{r protein sequence alignments}
-## C protein muscle aligment ## 
-cproAA_align<-muscle(cproAA,quiet=F)
-cpro_alignment_visual <- image.AAbin(cproAA_align, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
-
-## prM protein muscle alignment ##
-prMproAA_align<-muscle(prMproAA,quiet=F)
-prMpro_alignment_visual <- image.AAbin(prMproAA_align, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
-
-## E protein muscle alignment ## 
-eproAA_align<-muscle(eproAA,quiet=F)
-epro_alignment_visual <- image.AAbin(eproAA_align, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
-
+```{r run the distance matrix visualization function on the dataset for each protein}
+MatrixFunction(CproDM) # Generate distance matrix visual for the C protein.
+MatrixFunction(prMproDM) # Generate distance matrix visual for the prM protein.
+MatrixFunction(eproDM) # Generate distance matrix visual for the E protein.
 ```
 
-```{r distance matrices}
-## C protein distance matrix. ##
-CproDM<-dist.aa(eproAA_align) # generate distance matrix based on AA sequences.
-CproDMmat<-as.matrix(CproDM) # convert to matrix format.
-dim(CproDMmat) # 104 x 104
+## Group vector information and create phylogeny
+```{r function for phylogenetic trees}
+# Function for generating a phylogenetic tree by country OR vector.
 
-# Melt to a linear matrix and generate distance matrix visual.
-CproDMlmat<-melt(CproDMmat) # Linear matrix.
-CproDMvis<-ggplot(data=CproDMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_gradientn(colours=c("white","blue","green","red")) + theme(text = element_text(size=5),
-        axis.text.x = element_text(angle=90, hjust=1)) + ggtitle("C Protein Distance Matrix")
-
-## prM protein distance matrix. ##
-prMproDM<-dist.aa(prMproAA_align) # generate distance matrix based on AA sequences.
-prMproDMmat<-as.matrix(prMproDM) # convert to matrix format.
-dim(prMproDMmat) # 104 x 104
-
-# Melt to a linear matrix and generate distance matrix visual.
-prMproDMlmat<-melt(prMproDMmat) # Linear matrix.
-prMproDMvis<-ggplot(data=prMproDMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_gradientn(colours=c("white","blue","green","red")) + theme(text = element_text(size=5),
-        axis.text.x = element_text(angle=90, hjust=1)) + ggtitle("prM Protein Distance Matrix")
-
-
-## E protein distance matrix. ##
-eproDM<-dist.aa(eproAA_align) # generate distance matrix based on AA sequences.
-eproDMmat<-as.matrix(eproDM) # convert to matrix format.
-dim(eproDMmat) # 104 x 104
-
-# Melt to a linear matrix and generate distance matrix visual.
-eproDMlmat<-melt(eproDMmat) # Linear matrix.
-eproDMvis<-ggplot(data=eproDMlmat,aes(x=Var1,y=Var2,fill=value)) + geom_tile() + scale_fill_gradientn(colours=c("white","blue","green","red")) + theme(text = element_text(size=5),
-        axis.text.x = element_text(angle=90, hjust=1)) + ggtitle("E Protein Distance Matrix")
-
-```
-
-### Old code ###
-```{r initial alignments}
-#seqAlign<-muscle(seqAA,quiet=F)
-#alview(seqAlign)
-#monopic <- image.AAbin(seqAlign, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.5, legend = T, aa.cex = 0.8)
-```
-
-## Group Vector Information and create Phylogeny
-
-### Create a function to make a phylogenetic tree for proteins 
-```{r}
-# this functions takes in the protein for the tree to be created and whether it should create a phylogenetic tree for country or vector 
-
-treefunction <- function(tree, type) {
-  PhyloTree<- nj(tree)
+treefunction <- function(tree, type) { # The input of this function is the distance matrix data object (type dist()) and type of phylogenetic tree (e.g. grouped by country or  vector).
+  PhyloTree<- nj(tree) # Generate a phylogenetic tree using the Neighbour-Joining approach.
   
-  country = stri_extract_all(PhyloTree$tip.label, regex= "USA|Australia|South Africa|Israel|Russia|India|Madagascar|Azerbaijan|Ukraine|Czech Republic|Kenya|Nigeria|Central African Republic|DRC|Portugal|Morocco|Senegal|Tunisia|Cyprus|Japan|France", mode = "all", simplify =TRUE)  
+  country = stri_extract_all(PhyloTree$tip.label, regex= "USA|Australia|South Africa|Israel|Russia|India|Madagascar|Azerbaijan|Ukraine|Czech Republic|Kenya|Nigeria|Central African Republic|DRC|Portugal|Morocco|Senegal|Tunisia|Cyprus|Japan|France", mode = "all", simplify =TRUE)  # Object with code for extracting just the country name from the sequence titles.
 
-  vect = stri_extract_all(PhyloTree$tip.label, regex= "Culex|Other|Equus|Homo sapiens|Corvus|Culiseta|Ornithodoros|Mus|Hyalomma|Oriolus|Aves|Dermacentor|Aedes|Rousettus|Culicidae",mode = "all", simplify =TRUE) 
+  vect = stri_extract_all(PhyloTree$tip.label, regex= "Culex|Other|Equus|Homo sapiens|Corvus|Culiseta|Ornithodoros|Mus|Hyalomma|Oriolus|Aves|Dermacentor|Aedes|Rousettus|Culicidae",mode = "all", simplify =TRUE)  # Object with code for extracting just the vector name from the sequence titles. 
 
 if (type == "country"){
-Groups = split(PhyloTree$tip.label, country) #Separate country from strain name
+Groups = split(PhyloTree$tip.label, country) # Apply the above code for extracting just the country name from sequence titles to the phylogenetic tree tip labels, if input is specified as type "country".
 }
 else if (type == "vect"){
-Groups = split(PhyloTree$tip.label, vect) #Separate vector from strain name
+Groups = split(PhyloTree$tip.label, vect) # Apply the above code for extracting just the vector name from sequence titles to the phylogenetic tree tip labels, if input is specified as type "vect".
 }
-col = groupOTU(PhyloTree,Groups) #Creates a group
-ggtree(col, layout="rectangular", branch.length = "none", aes(color = group))#creates tree  
-}
+col = groupOTU(PhyloTree,Groups) # Groups tree by either country or vector, depending on whether input was specified as type "country" or "vect," respectively.
 
+ggtree(col, layout="rectangular", aes(color = group)) # Generate tree visualization in rectangular layout, coloured by whatever grouping factor was specified in the function input. 
+}
 ```
 
-```{r}
-#c protein trees
-treefunction(CproDM, "country")
-treefunction(CproDM, "vect")
+```{r generate phylogenetic trees for each protein by vector and country}
+## C protein
+treefunction(CproDM, "country") # Phylogenetic tree of the C protein grouped by country where the sequence was isolated.
+treefunction(CproDM, "vect") # Phylogenetic tree of the C protein grouped by vector from which the sequence was isolated.
 
-#prM protein trees
-treefunction(prMproDM, "country")
-treefunction(prMproDM, "vect")
+## prM protein
+treefunction(prMproDM, "country") # Phylogenetic tree of the prM protein grouped by country where the sequence was isolated.
+treefunction(prMproDM, "vect") # Phylogenetic tree of the prM protein grouped by vector from which the sequence was isolated.
 
-#e protein trees 
-treefunction(eproDM, "country")
-treefunction(eproDM, "vect")
+## E protein
+treefunction(eproDM, "country") # Phylogenetic tree of the E protein grouped by country where the sequence was isolated.
+treefunction(eproDM, "vect") # Phylogenetic tree of the E protein grouped by vector from which the sequence was isolated.
 ```
 
 ### Zooming in on interesting parts of each phylogeny
-
 ```{r}
 #Create function to generate new tip labels for each tree
 nametip = function(tree) {
@@ -238,7 +196,6 @@ ET = ggtree(TreeE, branch.length = "none")+
   geom_hilight(node=135, fill="blue", alpha = 0.15)
 
 ET = ggtree::collapse(ET, node=153) #collapse clade to the right of groupings
-
 viewClade(ET, MRCA(ET, 82, 80)) #Zoom in on interesting groupings
 ```
 

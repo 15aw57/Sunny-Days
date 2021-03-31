@@ -64,6 +64,7 @@ seqDF<-seqDF[KeepSeq,] # Creating a new dataset object with only sequences over 
 ## Distance matrix and MUSCLE protein analysis.
 ```{r isolating structural proteins}
 ## To isolate the structural proteins from the full length polyprotein amino acid sequences, we used substr() and the known protein cleavage sites. We then converted each amino acid sequence into an AAbin object in preparation for a MUSCLE analysis and distance matrix generation. 
+
 cpro_seq<- unlist(substr(seqDF$seq, start = 6, stop = 123)) # The C protein is cleaved at sites 6 and 123.
 cproAA<-sapply(cpro_seq,strsplit,split="") # Put each amino acid into its own cell in preparation for conversion to an AAbin object.
 names(cproAA) <- seqDF$Title # Assign sequence titles as the names of each sequence. 
@@ -82,7 +83,6 @@ names(eproAA) <- seqDF$Title # Assign sequence titles as the names of each seque
 eproAA <- as.AAbin(eproAA) # Convert E protein dataset to an AAbin object.
 ```
 
-  
 
 ```{r distance matrix and MUSCLE alignment function} 
 DMfunction <- function(protein) { #The function input is amino acid sequence dataset for each protein.
@@ -121,6 +121,7 @@ MatrixFunction(eproDM) # Generate distance matrix visual for the E protein.
 ```
 
 ## Group vector information and create phylogeny
+
 ```{r function for phylogenetic trees}
 # Function for generating a phylogenetic tree by country OR vector.
 
@@ -159,7 +160,8 @@ treefunction(eproDM, "vect") # Phylogenetic tree of the E protein grouped by vec
 
 ### Zooming in on interesting parts of each phylogeny
 ```{r}
-#Create function to generate new tip labels for each tree
+#Create function to generate new tip labels for each tree displaying (country,year). The input of this function is a phylogenetic tree.
+
 nametip = function(tree) {
   
 #Use regex to select country out of the Tip labels
@@ -176,9 +178,9 @@ return(name$full)
 }
 ```
 
-```{r}
+```{r warning = F, message = F}
 TreeE = nj(eproDM) #Create Tree using E Protein
-TreeC = nj(CproDM) #Create Tree using E Protein
+TreeC = nj(CproDM) #Create Tree using C Protein
 TreeprM = nj(prMproDM) #Create Tree using prM protein
 
 TreeE$tip.label = nametip(TreeE) #Assign new tip labels to each protein tree

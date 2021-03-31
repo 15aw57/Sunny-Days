@@ -9,7 +9,6 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
 ```{r package load, warning=FALSE, message=FALSE}
 library(BiocManager)
 library(annotate)
@@ -180,11 +179,10 @@ else if (type == "vect"){
 Groups = split(PhyloTree$tip.label, vect) #Separate vector from strain name
 }
 col = groupOTU(PhyloTree,Groups) #Creates a group
-ggtree(col, layout="rectangular", aes(color = group))#creates tree  
+ggtree(col, layout="rectangular", branch.length = "none", aes(color = group))#creates tree  
 }
 
 ```
-
 
 ```{r}
 #c protein trees
@@ -199,17 +197,77 @@ treefunction(prMproDM, "vect")
 treefunction(eproDM, "country")
 treefunction(eproDM, "vect")
 ```
+
+### Zooming in on interesting parts of each phylogeny
+
 ```{r}
-Cworld = read.csv("./input/Ccoord.csv")
-rownames(Cworld) = Cworld[,1]
-Cworld = subset(Cworld, select = -name)
+#Create function to generate new tip labels for each tree
+nametip = function(tree) {
+  
+#Use regex to select country out of the Tip labels
+country = stri_extract_all(tree$tip.label, regex= "USA|Australia|South Africa|Israel|Russia|India|Madagascar|Azerbaijan|Ukraine|Czech Republic|Kenya|Nigeria|Central African Republic|DRC|Portugal|Morocco|Senegal|Tunisia|Cyprus|Japan|France", mode = "all", simplify =TRUE) 
 
-Tree = nj(CproDM)
-Tree$tip.label = stri_extract_all(Tree$tip.label, regex = "^.{8}",mode = "all", simplify =TRUE)
-Tree = phytools::midpoint.root(Tree)
+#Use regex to select years out of the E Protein Tip labels
+Year = stri_extract_all(tree$tip.label, regex = "\\d{4}[^\\d]*$",mode = "all", simplify =TRUE)
 
- phylo.to.map(Tree, Cworld,rotate = T)
-``` 
+#Combine the years and countries together and set those values as the new tip labels (Country,Year)
+name = melt(data.frame(country, Year))
+name$full = paste(name$country, name$Year, sep=",")
+
+return(name$full)
+}
+```
+
+```{r}
+TreeE = nj(eproDM) #Create Tree using E Protein
+TreeC = nj(CproDM) #Create Tree using E Protein
+TreeprM = nj(prMproDM) #Create Tree using prM protein
+
+TreeE$tip.label = nametip(TreeE) #Assign new tip labels to each protein tree
+TreeC$tip.label = nametip(TreeC)
+TreeprM$tip.label = nametip(TreeprM)
+```
+
+```{r}
+#Use ggtree to generate tree from E Protein
+ET = ggtree(TreeE, branch.length = "none")+
+  geom_tiplab(size = 2.75)+ #Decrease tip label size
+  xlim(NA,60)+  #Shift phylogeny to the left
+  geom_hilight(node=164, fill="gold", alpha = 0.15) + #highlight distinct groupings in phylogeny
+  geom_hilight(node=145, fill="purple", alpha = 0.15)+ 
+  geom_hilight(node=135, fill="blue", alpha = 0.15)
+
+ET = ggtree::collapse(ET, node=153) #collapse clade to the right of groupings
+
+viewClade(ET, MRCA(ET, 82, 80)) #Zoom in on interesting groupings
+```
+
+```{r}
+#Use ggtree to generate tree from C Protein
+CT = ggtree(TreeC, branch.length = "none")+
+  geom_tiplab(size = 2.75)+ #Decrease tip label size
+  xlim(NA,60)+  #Shift phylogeny to the left
+  geom_hilight(node=164, fill="orange", alpha = 0.2) + #highlight distinct groupings in phylogeny
+  geom_hilight(node=145, fill="pink", alpha = 0.2)+ 
+  geom_hilight(node=135, fill="skyblue", alpha = 0.2)
+
+CT = ggtree::collapse(CT, node=153) #collapse clade to the right of groupings
+
+viewClade(CT, MRCA(CT, 82, 80)) #Zoom in on interesting groupings
+```
+
+```{r}
+#Use ggtree to generate tree from prM Protein
+prMT = ggtree(TreeprM, branch.length = "none")+
+  geom_tiplab(size = 2.75)+ #Decrease tip label size
+  xlim(NA,80)+ #Shift phylogeny to the left
+  geom_hilight(node=144, fill="gold", alpha = 0.15) + #highlight distinct groupings in phylogeny
+  geom_hilight(node=161, fill="purple", alpha = 0.15)+ 
+  geom_hilight(node=174, fill="blue", alpha = 0.15)
+
+viewClade(prMT, MRCA(prMT, 140, 80)) #Zoom in on interesting groupings
+```
+
 
 
 

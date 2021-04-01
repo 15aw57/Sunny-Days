@@ -28,7 +28,24 @@ library(mapdata)
 ```
 
 
+## Data exploration: Developing a strategy to isolate WNV structural proteins
+
+```{r}
+sample_seq<-read.fasta("./input/sample_sequence.fasta") # import a single sample WNV mRNA sequence
+sample_seq <- unlist(sample_seq$`AY274505.1 Kunjin virus clone pAKUN polyprotein mRNA, complete cds`, use.names = F) # convert the single sequence to a vector
+sample_seq <- paste(sample_seq, collapse = "") # collapse vector into a single object list
+sample_seq<-gsub("([actg])","\\U\\1",sample_seq,perl=T) # capitalize the sequence letters
+
+m <- gregexpr("(ATG([ACTG]{3,3})+?((TAA)|(TAG)|(TGA)))",sample_seq) # find all open reading frames
+hi <- regmatches(sample_seq,m) # capture ORFs in an object
+hi # display object revealing a single polyprotein and some very small chunks
+
+# we will have to isolate the structural proteins by amino acid position rather than by nucleotide sequence! The CDART database will help us identify the positions to capture
+```
+
+
 ## Initial data import and set up. ##
+
 ```{r data import, echo=FALSE}
 ## Data import.
 seq <- readAAStringSet("./input/master_aa_seqs.fa") # Upload fasta file containing the polyprotein amino acid sequences of 104 isolates of West Nile Virus.
@@ -51,7 +68,7 @@ rownames(seqDF) <- seqDF[,1] # Identify the row names of the new dataset as the 
 ```
 
 ```{r data cleanup}
-## To check the quality of the data and remove any abberant sequences, we checked the lengths of the sequences in the dataset and removed the few outliers that were drastically different from the rest.
+## To check the quality of the data and remove any aberrant sequences, we checked the lengths of the sequences in the dataset and removed the few outliers that were drastically different from the rest.
 
 # Check sequence lengths.
 SeqLen<-as.numeric(lapply(seqDF$seq,nchar)) # Create an object containing the length of each sequence in the dataset.
@@ -65,19 +82,19 @@ seqDF<-seqDF[KeepSeq,] # Create a new dataset object with only those sequences o
 ```{r isolating structural proteins}
 ## To isolate the structural proteins from the full length polyprotein amino acid sequences, we used substr() and the known protein cleavage sites. We then converted each amino acid sequence into an AAbin object in preparation for a MUSCLE analysis and distance matrix generation. 
 
-cpro_seq<- unlist(substr(seqDF$seq, start = 6, stop = 123)) # The C protein is cleaved at sites 6 and 123.
+cpro_seq<- unlist(substr(seqDF$seq, start = 6, stop = 123)) # The C protein spans the Amino Acid sequence between position 6 and 123, this line isolates that chunk.
 cproAA<-sapply(cpro_seq,strsplit,split="") # Put each amino acid into its own cell in preparation for conversion to an AAbin object.
 names(cproAA) <- seqDF$Title # Assign sequence titles as the names of each sequence. 
 cproAA <- as.AAbin(cproAA) # Convert C protein dataset to an AAbin object.
 
 
-prMpro_seq <- unlist(substr(seqDF$seq, start = 217, stop = 290)) # The prM protein is cleaved at sites 217 and 290.
+prMpro_seq <- unlist(substr(seqDF$seq, start = 217, stop = 290)) # The prM protein spans the Amino Acid sequence between position 217 and 290, this line isolates that chunk.
 prMproAA<-sapply(prMpro_seq,strsplit,split="") # Put each amino acid into its own cell in preparation for conversion to an AAbin object.
 names(prMproAA) <- seqDF$Title # Assign sequence titles as the names of each sequence. 
 prMproAA <- as.AAbin(prMproAA) # Convert prM protein dataset to an AAbin object.
 
 
-epro_seq <- unlist(substr(seqDF$seq, start = 598, stop = 791)) # The E protein is cleaved at sites 598 and 791.
+epro_seq <- unlist(substr(seqDF$seq, start = 598, stop = 791)) # # The prM protein spans the Amino Acid sequence between position 598 and 791, this line isolates that chunk.
 eproAA<-sapply(epro_seq,strsplit,split="") # Put each amino acid into its own cell in preparation for conversion to an AAbin object.
 names(eproAA) <- seqDF$Title # Assign sequence titles as the names of each sequence. 
 eproAA <- as.AAbin(eproAA) # Convert E protein dataset to an AAbin object.
@@ -87,9 +104,8 @@ eproAA <- as.AAbin(eproAA) # Convert E protein dataset to an AAbin object.
 ```{r distance matrix and MUSCLE alignment function} 
 ## The following is a function for generating a distance matrix and conducting a MUSCLE alignment on an input amino acid sequence.
 DMfunction <- function(protein) { #The function input is an amino acid sequence.
-  align<-muscle(protein,quiet=F) # Run a muscle alignment on the input dataset.
-  
-  alignmentvisual <- image.AAbin(align, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.2, legend = T, aa.cex = 0.8) # Generate a visual of the MUSCLE alignment.
+  align<-muscle(protein,quiet=F) # Run a muscle alignment on the input data.
+  image.AAbin(align, bg = (wes_palette("Darjeeling1")[5]), col = wes_palette("Darjeeling1"), ylab = "WNV Variants", xlab = "Sequence Length", show.labels = T, cex.lab = 0.2, legend = T, aa.cex = 0.8) # Generate a visual of the MUSCLE alignment.
     DM<-dist.aa(align) # Generate a distance matrix based on amino acid sequences.
  }
 ```
@@ -97,7 +113,7 @@ DMfunction <- function(protein) { #The function input is an amino acid sequence.
 
 ```{r run the function on the dataset for each protein}
 ## Running the function on the amino acid sequences for each protein will generate a MUSCLE alignment and alignment visual for each protein, and a distance matrix for each protein.
-CproDM <- DMfunction(cproAA) # Run function on C protein dataset.
+CproDM <- DMfunction(cproAA) # Run function on C protein dataset. Capturing the output as an object for later use of the distance matrix.
 prMproDM <- DMfunction(prMproAA) # Run function on prM protein dataset.
 eproDM <- DMfunction(eproAA) # Run function on E protein dataset.
 ```

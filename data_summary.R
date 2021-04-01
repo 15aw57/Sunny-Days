@@ -27,8 +27,8 @@ dev.off()
 
 # release year
 svg(filename = './figures/release_year.svg')
-ggplot(dat, aes(x = as.numeric(release_year))) + geom_bar() +
-  scale_x_continuous(name = "Collection date", breaks = seq(1999, 2015, by = 2))
+ggplot(dat, aes(x = as.numeric(collection_date))) + geom_bar() +
+  scale_x_continuous(name = "Collection date", breaks = seq(1950, 2000, by = 5))
 dev.off()
 
 # genome length

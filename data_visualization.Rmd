@@ -8,89 +8,97 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+This code is used to visualize the data we will be working with to analyse West Nile Virus across different hosts and regions. 
 
 ```{r warning = FALSE}
+#Loading required libraries 
 library(ggplot2)
 library(dplyr)
 library(ggmap)
 library(mapproj)
 ```
 
+##Initializing the data 
 ```{r}
-#initialize the data
-dat <- read.csv("./input/info.csv")
+dat <- read.csv("./input/info.csv") #importing the data to use for visualizations. 
 
-dat$length <- as.factor(dat$length)
-dat <- mutate(dat, host = gsub("([A-Z].*) .*", "\\1", dat$host))
-dat <- mutate(dat, release_year = gsub("(\\d+)-.*", "\\1", dat$release_date))
+dat$length <- as.factor(dat$length) #making the length of the data a factor. 
+
+dat <- mutate(dat, host = gsub("([A-Z].*) .*", "\\1", dat$host)) #using regex to isolate the host. 
+dat <- mutate(dat, release_year = gsub("(\\d+)-.*", "\\1", dat$release_date)) #using regex to capture the release year.  
 ```
 
+##Creating a World Map of WNV Frequency 
 ```{r}
-country_df <- data.frame(table(dat$country))
-rownames(country_df) <- country_df$Var1
-country_df$region <- rownames(country_df)
+country_df <- data.frame(table(dat$country)) #creates a data frame of all the countries. 
+rownames(country_df) <- country_df$Var1 #re-names the country data frame row names in our data frame 
+country_df$region <- rownames(country_df) #re-names the data frame regions by country 
 
-world_map <- map_data("world")
-collection_map <- left_join(world_map, country_df, by = "region")
+world_map <- map_data("world") #
+collection_map <- left_join(world_map, country_df, by = "region") #
 
 # Create the map
-svg(filename = './figures/location.svg')
+svg(filename = './figures/location.svg') 
 ggplot(collection_map, aes(long, lat, group = group))+
   geom_polygon(aes(fill = Freq), color = "white") +
-  scale_fill_viridis_c(option = "C")
+  scale_fill_viridis_c(option = "C") #uses ggplot to create a world map of frequency 
 dev.off()
 ```
 
+##Release year visualization 
 ```{r}
 # release year
 svg(filename = './figures/release_year.svg')
 ggplot(dat, aes(x = as.numeric(collection_date))) + geom_bar() +
-  scale_x_continuous(name = "Collection date", breaks = seq(1950, 2000, by = 5))
+  scale_x_continuous(name = "Collection date", breaks = seq(1950, 2000, by = 5)) #creates a histogram for the collection date of WNV 
 dev.off()
 ```
 
+## Genome length visualization 
 ```{r}
-# genome length
 svg(filename = './figures/genome_length.svg')
 ggplot(dat, aes(x = "", y = length, fill = length)) + 
   geom_bar(width = 1, stat = "identity") + 
-  coord_polar("y", start = 0) + theme_void() + ggtitle("Genome Length")
+  coord_polar("y", start = 0) + theme_void() + ggtitle("Genome Length") #creates a pie chart of the genome length ditribution 
 dev.off()
 ```
 
+## Vector Count visualization 
 ```{r}
-# host
-host_count <- count(dat, host)
+host_count <- count(dat, host) #saves the count of host count in a new object 
+
 common_name <- c("Unknown", "Mosquito (Aedes)", "Bird", "Crow", "Mosquito (Culex)", 
                  "Mosquito (Cuclicidae)", "Mosquito (Culiseta)", "Ticks (Dermacentor)", "Horse",
                  "Human", "Ticks (Hyalomma)", "Oriolus (Bird)", "Ticks (Ornithodoros)", "Fruit bat",
-                 "Tissue culture")
-species <- c("Unknown", "Mosquito", "Bird", "Bird", "Mosquito", "Mosquito", "Mosquito", "Ticks",
-             "Horse", "Human", "Ticks", "Bird", "Ticks", "Bat", "Tissue")
+                 "Tissue culture")  #creates a vector of the vector common name 
 
-host_count <- cbind(host_count, common_name, Species = as.factor(species))
+species <- c("Unknown", "Mosquito", "Bird", "Bird", "Mosquito", "Mosquito", "Mosquito", "Ticks",
+             "Horse", "Human", "Ticks", "Bird", "Ticks", "Bat", "Tissue") #creates a vector of all species names 
+
+host_count <- cbind(host_count, common_name, Species = as.factor(species)) #combines the common names and species name vectors in a list 
+
 
 svg(filename = './figures/host.svg')
 host_count %>% ggplot(aes(x = reorder(common_name, n), y = n, fill = Species)) + 
   geom_col() + coord_flip() + 
-  scale_x_discrete(name = "Species") + scale_y_continuous(name = "Count")
+  scale_x_discrete(name = "Species") + scale_y_continuous(name = "Count") #Creates a bar plot of the different species count 
 dev.off()
 ```
 
+##Protein percentage identity matrix
 ```{r}
-# protein percentage identity matrix
-data_CDS <- read.table('./input/pim.txt', header = F, sep = "")
-rnames <- data_CDS[,1]
-data_CDS2 <- data.matrix(data_CDS[, 2:ncol(data_CDS)])
+data_CDS <- read.table('./input/pim.txt', header = F, sep = "") #reads data 
+rnames <- data_CDS[,1] #indexes data to read only the first column 
+data_CDS2 <- data.matrix(data_CDS[, 2:ncol(data_CDS)]) #creates a data matrix 
 rownames(data_CDS2) <- rnames
 colnames(data_CDS2) <- rnames
 
 #Set the colour scheme
-require(RColorBrewer)
-my_palette = colorRampPalette(c("white", "blue"))(n = 11)
+library(RColorBrewer) #loads the RColor Brewer package 
+my_palette = colorRampPalette(c("white", "blue"))(n = 11) #creates colour scheme with desired colorus 
 
 #Set other variables
-require(gplots)
+library(gplots) #loads the gplots package 
 
 #Prepare heatmaps
 svg(filename = './figures/aai.svg')

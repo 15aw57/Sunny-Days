@@ -1,6 +1,6 @@
 ---
-title: "data_setup"
-author: "Micah GVI"
+title: "Phylogenetic and alignment analysis of West Nile Virus polyprotein amino acid sequence isolates"
+author: "Micah GVI, Dale Moskoff, Sydney Berman, Amelia Walsh, Yi Fan Duan"
 date: "04/03/2021"
 output: html_document
 ---
@@ -8,6 +8,17 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+Since the initial isolation of the West Nile Virus in 1937 from a human in the West Nile District of Uganda, the West Nile Virus has spread globally and become an increasingly important pathogen for humans and animals. West Nile Virus is a mosquito-borne pathogen of the family Flaviviridae, genus Flavivirus. The natural transmission cycle of the virus primarily involves Culex species mosquitoes and birds, with humans being incidental hosts. While the majority of infected humans are asymptomatic, there have been significant WNV epidemics with multiple reports of encephalitis and death in history. The 1999-2000 epidemic in the USA coincided with an epizootic event in which substantial numbers of wild birds and equines died. 
+
+	The WNV genome is a single-stranded positive-sense RNA encoding a polyprotein precursor of approximately 3430 amino acids. The polyprotein is cleaved into 3 structural and 7 non-structural proteins. The three structural proteins are the capsid (C) protein, precursor and membrane (prM/M) protein, and the envelope (E) protein. At present, there is no registered human vaccine or established treatment for WNV. Structural proteins represent viable targets for the development of new antiviral agents, as such proteins are critical for many stages of the virus replication cycle. Mutations in these critical cell proteins can disrupt host-virus interactions and the efficiency of viral replication; as such, cell proteins involved in viral replication can be expected to be highly conserved between divergent host species.
+
+	Recent phylogenetic analysis on nucleic acid sequence data from a portion of the E protein gene has highlighted two distinct lineages of the WNV. Lineage 1 has a worldwide distribution and is known to exist in such geographically distinct places as Western Africa, the Middle East, Eastern Europe, the USA, and Australia.  Lineage 2 exists exclusively on the African continent. Lineage 2 appears to be less virulent to humans, while lineage 1 isolates have been known to be involved in epidemics and epizootics. 
+
+We will conduct an amino acid sequence alignment for each of the three proteins. As these proteins are integral for viral replication, we expect to see high levels of conservation across sequences. Identifying conserved sites is important in elucidating candidates for vaccine or treatment targets. We will then use sequence alignment information to construct a phylogenetic tree of each of the three proteins. In our analysis, we expect to see two lineages evident in the E protein phylogeny, with one corresponding to Lineage 1 (global distribution) and the other corresponding with Lineage 2 (African distribution only). We will investigate whether the two known lineages are parallelled in C and prM protein phylogenies. 
+
+
+
 
 ```{r package load, warning=FALSE, message=FALSE}
 # Load required libraries.
@@ -240,8 +251,9 @@ prMT = ggtree(TreeprM, branch.length = "none")+
 viewClade(prMT, MRCA(prMT, 140, 80)) #Zoom in on interesting groupings
 ```
 
+In conclusion, based on our analysis these structural proteins are highly conserved and would be good targets for antiviral agents or for use in a vaccine. We would probably recommend the prM (premembrane) or C (capsid) protein as targets because they are likely to be localized on the exterior of the virus making them easily accessible to antibodies or antiviral agents. Of course, extensive additional research would be required to confirm this.
 
-
+Overall, our analysis of the West Nile Virus protein genomes resulted in different results compared that presented in the literature. While the literature uncovered two distinct lineages in the West Nile Virus genomes, we uncovered three in each protein’s genomes. Additionally, the countries where our lineages originated differed significantly compared to the lineages found in literature. While these results could have been the result of a different genome data set or a different phylogenetic method, it could also indicate a need for further research into the topic. If we are able to target these structural proteins with the antiviral agents we could prevent future epidemics. 
 
 
 

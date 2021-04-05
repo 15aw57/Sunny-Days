@@ -4,6 +4,12 @@ author: "Yifan Duan"
 date: "01/04/2021"
 output: html_document
 ---
+BASH SCRIPT to generate cluster data
+#!/bin/bash
+sudo apt-get install cd-hit # install cd-hit; check github page for cdhit for installing on mac/windows
+mkdir output/
+cd-hit -i input/protein.fa -o cdhit_output/ -c 0.95 # run cdhit
+cp cdhit_output/*.fas.1.clstr cluster.txt
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
